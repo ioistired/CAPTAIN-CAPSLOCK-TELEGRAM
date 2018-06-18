@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION update_time_column()
 RETURNS TRIGGER AS $$
 BEGIN
 	IF row(NEW.hash) IS DISTINCT FROM row(OLD.hash) THEN
-		NEW.time = now() at time zone 'UTC';
+		NEW.time = now() AT TIME ZONE 'UTC';
 		RETURN NEW;
 	ELSE
 		RETURN OLD;

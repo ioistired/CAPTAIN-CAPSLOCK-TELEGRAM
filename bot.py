@@ -10,34 +10,45 @@ import asyncpg
 from passlib.hash import argon2
 import discord
 
+client = discord.AutoShardedClient()
+
+with open('data/config.json') as f:
+	config = json.load(f)
+del f
+
+# a salt is required for consistent hashes,
+# however, I'm not using one
+# the intention of hashing is mostly to make it difficult for me to read message
+# content. I do not plan on making rainbow tables to do so, and even then,
+# argon2 should be good enough that they won't help me much
+# if you change these parameters, you MUST clear all entries from the database.
+hasher = argon2.using(parallelism=4, memory_cost=128*1024, rounds=10, salt=b'12345678')
 
 UPPERCASE_LETTERS = set()
 for c in map(chr, range(sys.maxunicode+1)):
-	if unicode_category(c) == 'Lu':
+	if unicode_category(c) == 'Lu':  # uppercase letter
 		UPPERCASE_LETTERS.add(c)
 UPPERCASE_LETTERS = frozenset(UPPERCASE_LETTERS)
 del c
-client = discord.AutoShardedClient()
-# a salt is required for consistent hashes,
-# however, I'm not using one
-hasher = argon2.using(parallelism=4, memory_cost=128*1024, rounds=10, salt=b'12345678')
+
+def is_shout(str):
+	length = len(str)
+	# "H" is not a shout
+	if length < 2: return False
+
+	# calculate the percentage of letters which are capital
+	sum = 0
+	for c in str:
+		if c in UPPERCASE_LETTERS:
+			sum += 1
+	return (sum / length) > 0.5
+
+## EVENTS
 
 @client.event
 async def on_ready():
 	await load_db()
 	print('Ready')
-
-async def load_db():
-	global pool
-	with open('data/config.json') as f:
-		credentials = json.load(f)['database']
-
-	pool = await asyncpg.connect(**credentials)
-
-	with open('data/schema.sql') as f:
-		schema = f.read()
-
-	await pool.execute(schema)
 
 @client.event
 async def on_message(message):
@@ -57,19 +68,17 @@ async def on_raw_message_edit(payload):
 	if not await pool.fetchval('SELECT hash FROM shout WHERE message = $1', id):
 		return
 
-	if not is_shout(payload.data['content']):
-		await pool.execute('DELETE FROM shout WHERE message = $1', id)
+	content = payload.data['content']
+	if not is_shout(content):
+		await delete_shout(id)
 		return
 
-	h = await hash(payload.data['content'])
+	h = await hash(content)
 	try:
 		await pool.execute('UPDATE shout SET hash = $1 WHERE message = $2', h, id)
-	except asyncpg.UniqueConstraintViolationError:
+	except asyncpg.UniqueViolationError:
 		# don't store duplicate hashes
 		await pool.execute('DELETE FROM shout WHERE message = $1', id)
-
-async def delete_shout(message_id):
-	await pool.execute('DELETE FROM shout WHERE message = $1', message_id)
 
 @client.event
 async def on_raw_message_delete(payload):
@@ -80,8 +89,15 @@ async def on_raw_bulk_message_delete(payload):
 	for id in payload.message_ids:
 		await delete_shout(id)
 
-async def hash(string):
-	return await client.loop.run_in_executor(None, hasher.hash, string)
+@client.event
+async def on_guild_channel_delete(channel):
+	await pool.execute('DELETE FROM shout WHERE channel = $1', channel.id)
+
+@client.event
+async def on_guild_remove(guild):
+	await pool.execute('DELETE FROM shout WHERE guild_or_user = $1', guild.id)
+
+## DATABASE
 
 async def save_shout(message):
 	h = await hash(message.content)
@@ -102,7 +118,6 @@ async def get_shout():
 		# probably there were no records in the db yet
 		return
 	thing_id, channel_id, message_id = result
-
 
 	thing = client.get_guild(thing_id) or client.get_user(thing_id)
 	if thing is None:
@@ -125,20 +140,25 @@ async def get_shout():
 
 	return message.content
 
-def is_shout(str):
-	length = len(str)
-	# "H" is not a shout
-	if length < 2: return False
+async def delete_shout(message_id):
+	await pool.execute('DELETE FROM shout WHERE message = $1', message_id)
 
-	# calculate the percentage of letters which are capital
-	sum = 0
-	for c in str:
-		if c in UPPERCASE_LETTERS:
-			sum += 1
-	return (sum / length) > 0.5
+## MISC
+
+async def load_db():
+	global pool
+
+	credentials = config['database']
+	pool = await asyncpg.connect(**credentials)
+
+	with open('data/schema.sql') as f:
+		schema = f.read()
+
+	await pool.execute(schema)
+
+async def hash(string):
+	return await client.loop.run_in_executor(None, hasher.hash, string)
 
 
 if __name__ == '__main__':
-	import os
-
-	client.run(os.environ['LOUDBOT_TOKEN'])
+	client.run(config['tokens']['discord'])
