@@ -1,7 +1,9 @@
 CREATE TABLE IF NOT EXISTS shout (
-	hash VARCHAR(100) NOT NULL PRIMARY KEY UNIQUE,
-	id BIGINT NOT NULL UNIQUE
-	time TIMESTAMP WITH TIMEZONE DEFAULT (now() AT TIME ZONE 'UTC')
+	hash VARCHAR(100) NOT NULL UNIQUE,
+	guild_or_user BIGINT NOT NULL,
+	channel BIGINT NOT NULL,
+	message BIGINT NOT NULL PRIMARY KEY UNIQUE,
+	time TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'UTC')
 );
 
 -- https://stackoverflow.com/a/26284695/1378440
@@ -18,6 +20,7 @@ END;
 $$ language 'plpgsql';
 
 DROP TRIGGER IF EXISTS update_shout_time ON shout;
+
 CREATE TRIGGER update_shout_time
 BEFORE UPDATE ON shout
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
