@@ -3,7 +3,8 @@
 		"user": "loudbot",
 		"password": "hunter2",
 		"database": "loudbot",
-		"host": "localhost"},
+		"host": "localhost",
+		"port": 5432},
 
 	"tokens": {
 		"discord": "sek.rit.token"}}
