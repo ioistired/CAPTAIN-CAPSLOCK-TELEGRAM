@@ -1,0 +1,6 @@
+{
+	"database": {
+		"user": "loudbot",
+		"password": "hunter2",
+		"database": "loudbot",
+		"host": "localhost"}}
