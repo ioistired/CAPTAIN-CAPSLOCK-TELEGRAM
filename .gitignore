@@ -1,3 +1,6 @@
+__pycache__/
+# nano swap files
+*.swp
 /venv/
 /.venv/
 /data/config.json
