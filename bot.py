@@ -23,7 +23,7 @@ del f
 # content. I do not plan on making rainbow tables to do so, and even then,
 # argon2 should be good enough that they won't help me much
 # if you change these parameters, you MUST clear all entries from the database.
-hasher = argon2.using(parallelism=4, memory_cost=128*1024, rounds=10, salt=b'12345678')
+hasher = argon2.using(parallelism=4, memory_cost=128*1024, rounds=5, salt=b'12345678')
 
 UPPERCASE_LETTERS = set()
 for c in map(chr, range(sys.maxunicode+1)):
@@ -67,7 +67,7 @@ async def on_raw_message_edit(payload):
 		return
 
 	id = payload.message_id
-	if not await pool.fetchval('SELECT hash FROM shout WHERE message = $1', id):
+	if not await pool.fetchval('SELECT 1 FROM shout WHERE message = $1', id):
 		return
 
 	content = payload.data['content']
