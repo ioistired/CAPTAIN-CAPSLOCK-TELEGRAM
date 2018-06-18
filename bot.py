@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import re
 import sys
 from unicodedata import category as unicode_category
 
@@ -57,6 +58,7 @@ async def on_message(message):
 
 	shout = await get_shout()
 	if shout: await message.channel.send(shout)
+	message.content = sanitize(message.content)
 	await save_shout(message)
 
 @client.event
@@ -70,10 +72,12 @@ async def on_raw_message_edit(payload):
 
 	content = payload.data['content']
 	if not is_shout(content):
+		# don't let people sneakily insert non-shouts into the database
 		await delete_shout(id)
 		return
 
-	h = await hash(content)
+	content = sanitize(content)
+	h = hasher.hash(content)
 	try:
 		await pool.execute('UPDATE shout SET hash = $1 WHERE message = $2', h, id)
 	except asyncpg.UniqueViolationError:
@@ -100,7 +104,7 @@ async def on_guild_remove(guild):
 ## DATABASE
 
 async def save_shout(message):
-	h = await hash(message.content)
+	h = hasher.hash(message.content)
 	await pool.execute("""
 		INSERT INTO shout(hash, guild_or_user, channel, message)
 		VALUES($1, $2, $3, $4)
@@ -135,15 +139,24 @@ async def get_shout():
 
 	try:
 		message = await channel.get_message(message_id)
+	except discord.Forbidden:
+		await delete_shout(message_id)
 	except discord.HTTPException:
 		return
 
-	return message.content
+	return sanitize(message.content)
 
 async def delete_shout(message_id):
 	await pool.execute('DELETE FROM shout WHERE message = $1', message_id)
 
 ## MISC
+
+def sanitize(s):
+	# if you change this, you MUST clear all entries from the database
+	s = re.sub(r'<@!?\d+>', '@SOMEONE', s, re.ASCII)
+	s = re.sub(r'<@&\d+>',   '@SOME ROLE', s, re.ASCII)
+	s = s.replace('@', '@\N{zero width non-joiner}')
+	return s
 
 async def load_db():
 	global pool
@@ -155,9 +168,6 @@ async def load_db():
 		schema = f.read()
 
 	await pool.execute(schema)
-
-async def hash(string):
-	return await client.loop.run_in_executor(None, hasher.hash, string)
 
 
 if __name__ == '__main__':
