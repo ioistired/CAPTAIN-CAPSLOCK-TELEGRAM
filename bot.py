@@ -8,7 +8,6 @@ import sys
 from unicodedata import category as unicode_category
 
 import asyncpg
-from passlib.hash import argon2
 import discord
 
 client = discord.AutoShardedClient()
@@ -16,14 +15,6 @@ client = discord.AutoShardedClient()
 with open('data/config.json') as f:
 	config = json.load(f)
 del f
-
-# a salt is required for consistent hashes,
-# however, I'm not using one
-# the intention of hashing is mostly to make it difficult for me to read message
-# content. I do not plan on making rainbow tables to do so, and even then,
-# argon2 should be good enough that they won't help me much
-# if you change these parameters, you MUST clear all entries from the database.
-hasher = argon2.using(parallelism=4, memory_cost=128*1024, rounds=5, salt=b'12345678')
 
 UPPERCASE_LETTERS = set()
 for c in map(chr, range(sys.maxunicode+1)):
@@ -58,7 +49,6 @@ async def on_message(message):
 
 	shout = await get_random_shout()
 	if shout: await message.channel.send(shout)
-	message.content = sanitize(message.content)
 	await save_shout(message)
 
 @client.event
@@ -67,7 +57,7 @@ async def on_raw_message_edit(payload):
 		return
 
 	id = payload.message_id
-	if not await pool.fetchval('SELECT 1 FROM shout WHERE message = $1', id):
+	if not await pool.fetchval('SELECT 1 FROM shout WHERE id = $1', id):
 		return
 
 	content = payload.data['content']
@@ -77,12 +67,11 @@ async def on_raw_message_edit(payload):
 		return
 
 	content = sanitize(content)
-	h = hasher.hash(content)
 	try:
-		await pool.execute('UPDATE shout SET hash = $1 WHERE message = $2', h, id)
+		await pool.execute('UPDATE shout SET content = $1 WHERE id = $2', content, id)
 	except asyncpg.UniqueViolationError:
-		# don't store duplicate hashes
-		await pool.execute('DELETE FROM shout WHERE message = $1', id)
+		# don't store duplicate shouts
+		await pool.execute('DELETE FROM shout WHERE id = $1', id)
 
 @client.event
 async def on_raw_message_delete(payload):
@@ -93,72 +82,38 @@ async def on_raw_bulk_message_delete(payload):
 	for id in payload.message_ids:
 		await delete_shout(id)
 
-@client.event
-async def on_guild_channel_delete(channel):
-	await pool.execute('DELETE FROM shout WHERE channel = $1', channel.id)
-
-@client.event
-async def on_guild_remove(guild):
-	await pool.execute('DELETE FROM shout WHERE guild_or_user = $1', guild.id)
-
 ## DATABASE
 
 async def save_shout(message):
-	h = hasher.hash(message.content)
 	await pool.execute("""
-		INSERT INTO shout(hash, guild_or_user, channel, message)
-		VALUES($1, $2, $3, $4)
-		ON CONFLICT(hash) DO NOTHING
-	""", h, getattr(message.channel, 'guild', message.author).id, message.channel.id, message.id)
+		INSERT INTO shout(id, content)
+		VALUES($1, $2)
+		ON CONFLICT DO NOTHING
+	""", message.id, sanitize(message.content))
 
 async def get_random_shout():
-	result = await pool.fetchrow("""
-		SELECT guild_or_user, channel, message
+	shout = await pool.fetchrow("""
+		SELECT id, content
 		FROM shout
 		ORDER BY random()
-		LIMIT 1""")
+		LIMIT 1
+	""")
 
-	if not result:
+	if not shout:
 		# probably there were no records in the db yet
 		return
 
-	return await get_shout(*result)
+	return shout['content']
 
-async def get_shout(guild_or_user_id, channel_id, message_id):
-	thing_id = guild_or_user_id  # lol too lazy to type this
-
-	thing = client.get_guild(thing_id) or client.get_user(thing_id)
-	if thing is None:
-		await pool.execute('DELETE FROM shout WHERE guild_or_user = $1', thing_id)
-		return
-
-	try:
-		# thing is a User
-		channel = thing.dm_channel
-	except AttributeError:
-		# thing is a Guild
-		channel = thing.get_channel(channel_id)
-
-	if channel is None:
-		await pool.execute('DELETE FROM shout WHERE channel = $1', channel_id)
-		return
-
-	try:
-		message = await channel.get_message(message_id)
-	except discord.NotFound:
-		await delete_shout(message_id)
-	except discord.HTTPException:
-		return
-
-	return sanitize(message.content)
+async def get_shout(message_id):
+	return await pool.fetchval('SELECT content FROM shout WHERE id = $1', message_id)
 
 async def delete_shout(message_id):
-	await pool.execute('DELETE FROM shout WHERE message = $1', message_id)
+	await pool.execute('DELETE FROM shout WHERE id = $1', message_id)
 
 ## MISC
 
 def sanitize(s):
-	# if you change this, you MUST clear all entries from the database
 	s = re.sub(r'<@!?\d+>', '@SOMEONE', s, re.ASCII)
 	s = re.sub(r'<@&\d+>',  '@SOME ROLE', s, re.ASCII)
 	s = s.replace('@everyone', '@EVERYONE')
