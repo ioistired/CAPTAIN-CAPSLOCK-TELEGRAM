@@ -56,7 +56,7 @@ async def on_message(message):
 	if not is_shout(message.content) or message.author.bot:
 		return
 
-	shout = await get_shout()
+	shout = await get_random_shout()
 	if shout: await message.channel.send(shout)
 	message.content = sanitize(message.content)
 	await save_shout(message)
@@ -111,7 +111,7 @@ async def save_shout(message):
 		ON CONFLICT(hash) DO NOTHING
 	""", h, getattr(message.channel, 'guild', message.author).id, message.channel.id, message.id)
 
-async def get_shout():
+async def get_random_shout():
 	result = await pool.fetchrow("""
 		SELECT guild_or_user, channel, message
 		FROM shout
@@ -121,7 +121,9 @@ async def get_shout():
 	if not result:
 		# probably there were no records in the db yet
 		return
-	thing_id, channel_id, message_id = result
+
+async def get_shout(guild_or_user_id, channel_id, message_id):
+	thing_id = guild_or_user_id  # lol too lazy to type this
 
 	thing = client.get_guild(thing_id) or client.get_user(thing_id)
 	if thing is None:
