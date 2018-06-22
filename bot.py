@@ -129,6 +129,7 @@ async def get_shout(guild_or_user_id, channel_id, message_id):
 
 	thing = client.get_guild(thing_id) or client.get_user(thing_id)
 	if thing is None:
+		await pool.execute('DELETE FROM shout WHERE guild_or_user = $1', thing_id)
 		return
 
 	try:
@@ -139,6 +140,7 @@ async def get_shout(guild_or_user_id, channel_id, message_id):
 		channel = thing.get_channel(channel_id)
 
 	if channel is None:
+		await pool.execute('DELETE FROM shout WHERE channel = $1', channel_id)
 		return
 
 	try:
