@@ -122,6 +122,8 @@ async def get_random_shout():
 		# probably there were no records in the db yet
 		return
 
+	return await get_shout(*result)
+
 async def get_shout(guild_or_user_id, channel_id, message_id):
 	thing_id = guild_or_user_id  # lol too lazy to type this
 
