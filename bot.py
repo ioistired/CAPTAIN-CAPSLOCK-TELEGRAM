@@ -160,8 +160,10 @@ async def delete_shout(message_id):
 def sanitize(s):
 	# if you change this, you MUST clear all entries from the database
 	s = re.sub(r'<@!?\d+>', '@SOMEONE', s, re.ASCII)
-	s = re.sub(r'<@&\d+>',   '@SOME ROLE', s, re.ASCII)
-	s = s.replace('@', '@\N{zero width non-joiner}')
+	s = re.sub(r'<@&\d+>',  '@SOME ROLE', s, re.ASCII)
+	s = s.replace('@everyone', '@EVERYONE')
+	s = s.replace('@here', f'@HERE')
+
 	return s
 
 async def load_db():
