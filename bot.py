@@ -164,7 +164,7 @@ async def load_db():
 	global pool
 
 	credentials = config['database']
-	pool = await asyncpg.connect(**credentials)
+	pool = await asyncpg.create_pool(**credentials)
 
 	with open('data/schema.sql') as f:
 		schema = f.read()
