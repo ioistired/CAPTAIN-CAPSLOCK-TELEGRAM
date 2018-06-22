@@ -141,7 +141,7 @@ async def get_shout(guild_or_user_id, channel_id, message_id):
 
 	try:
 		message = await channel.get_message(message_id)
-	except discord.Forbidden:
+	except discord.NotFound:
 		await delete_shout(message_id)
 	except discord.HTTPException:
 		return
