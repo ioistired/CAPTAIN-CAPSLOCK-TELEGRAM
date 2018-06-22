@@ -1,5 +1,7 @@
 {
 	"database": {
+		"url": "you can use this instead of the below data. if both are specified, url will take precedence",
+
 		"user": "loudbot",
 		"password": "hunter2",
 		"database": "loudbot",
