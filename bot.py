@@ -5,35 +5,13 @@ import asyncio
 import json
 import re
 import sys
-from unicodedata import category as unicode_category
 
 import asyncpg
 import discord
 
+from is_shout import is_shout
+
 client = discord.AutoShardedClient()
-
-with open('data/config.json') as f:
-	config = json.load(f)
-del f
-
-UPPERCASE_LETTERS = set()
-for c in map(chr, range(sys.maxunicode+1)):
-	if unicode_category(c) == 'Lu':  # uppercase letter
-		UPPERCASE_LETTERS.add(c)
-UPPERCASE_LETTERS = frozenset(UPPERCASE_LETTERS)
-del c
-
-def is_shout(str):
-	length = len(str)
-	# "H" is not a shout
-	if length < 2: return False
-
-	# calculate the percentage of letters which are capital
-	sum = 0
-	for c in str:
-		if c in UPPERCASE_LETTERS:
-			sum += 1
-	return (sum / length) > 0.5
 
 ## EVENTS
 
@@ -136,6 +114,9 @@ async def load_db():
 
 	await pool.execute(schema)
 
+with open('data/config.json') as f:
+	config = json.load(f)
+del f
 
 if __name__ == '__main__':
 	client.run(config['tokens']['discord'])
