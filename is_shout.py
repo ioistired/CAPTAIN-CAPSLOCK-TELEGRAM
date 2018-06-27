@@ -31,7 +31,7 @@ def get_derived_core_properties():
 
 			properties.setdefault(property, set()).update(map(chr, range))
 
-	return {property: frozenset(codepoints) for property, codepoints in properties.items()}
+	return {property: frozenset(chars) for property, chars in properties.items()}
 
 def unicode_range_to_range(line):
 	range_str = line.split()[0]
