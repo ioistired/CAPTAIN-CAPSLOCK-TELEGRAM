@@ -14,7 +14,7 @@ def is_shout(str):
 		if c in UPPERCASE_LETTERS:
 			count += 1
 
-	return count / length > 0.5
+	return bool(length) and count / length > 0.5
 
 def get_derived_core_properties():
 	properties = {}
