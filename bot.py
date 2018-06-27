@@ -70,18 +70,12 @@ async def save_shout(message):
 	""", message.id, sanitize(message.content))
 
 async def get_random_shout():
-	shout = await pool.fetchrow("""
-		SELECT id, content
+	return await pool.fetchval("""
+		SELECT content
 		FROM shout
 		ORDER BY random()
 		LIMIT 1
 	""")
-
-	if not shout:
-		# probably there were no records in the db yet
-		return
-
-	return shout['content']
 
 async def get_shout(message_id):
 	return await pool.fetchval('SELECT content FROM shout WHERE id = $1', message_id)
