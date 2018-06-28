@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger('bot')
 logger.setLevel(logging.INFO)
 
-class Loudbot(commands.AutoShardedBot):
+class CaptainCapslock(commands.AutoShardedBot):
 	def __init__(self, *args, **kwargs):
 		with open('data/config.json') as f:
 			self.config = json.load(f)
@@ -49,5 +49,5 @@ class Loudbot(commands.AutoShardedBot):
 
 
 if __name__ == '__main__':
-	Loudbot().run()
+	CaptainCapslock().run()
 

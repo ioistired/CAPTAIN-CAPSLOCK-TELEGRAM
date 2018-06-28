@@ -13,9 +13,9 @@
 	"database": {
 		"url": "you can use this instead of the below data. if both are specified, url will take precedence",
 
-		"user": "loudbot",
+		"user": "captaincapslock",
 		"password": "hunter2",
-		"database": "loudbot",
+		"database": "captaincapslock",
 		"host": "localhost",
 		"port": 5432},
 
