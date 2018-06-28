@@ -26,7 +26,6 @@ CREATE TRIGGER update_shout_time
 BEFORE UPDATE ON shout
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
-
 CREATE TABLE IF NOT EXISTS guild_opt (
 	id BIGINT NOT NULL UNIQUE,
 	state BOOLEAN NOT NULL);

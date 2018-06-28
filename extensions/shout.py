@@ -62,6 +62,11 @@ class Shout:
 		if not is_shout(message.content) or message.author.bot:
 			return
 
+		context = await self.bot.get_context(message)
+		if context.command:
+			# don't respond if the user has sent a command
+			return
+
 		if message.guild:
 			guild = message.guild.id
 		else:
