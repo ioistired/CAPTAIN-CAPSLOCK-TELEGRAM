@@ -1,10 +1,13 @@
 CREATE TABLE IF NOT EXISTS shout (
 	guild_or_user BIGINT NOT NULL,
-	message BIGINT NOT NULL UNIQUE PRIMARY KEY,
-	content TEXT NOT NULL UNIQUE,
+	message BIGINT NOT NULL PRIMARY KEY,
+	content TEXT NOT NULL,
 	time TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'UTC')
 );
+-- old constraint on message content being globally unique
+ALTER TABLE shout DROP CONSTRAINT IF EXISTS shout_content_key;
 CREATE INDEX IF NOT EXISTS shout_guild_or_user_idx ON shout (guild_or_user);
+CREATE UNIQUE INDEX IF NOT EXISTS shout_guild_content_unique_idx ON shout (guild_or_user, content);
 
 -- https://stackoverflow.com/a/26284695/1378440
 CREATE OR REPLACE FUNCTION update_time_column()
