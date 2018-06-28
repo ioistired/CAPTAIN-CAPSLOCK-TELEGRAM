@@ -77,6 +77,67 @@ class Database:
 	async def delete_by_guild_or_user(self, guild_or_user):
 		await self._pool.execute('DELETE FROM shout WHERE guild_or_user = $1', guild_or_user)
 
+	@wait
+	async def _toggle_state(self, table_name, id, default):
+		"""toggle the state for a user or guild. If there's no entry already, new state = default."""
+		# see _get_state for why string formatting is OK here
+		await self._pool.execute(f"""
+			INSERT INTO {table_name} (id, state) VALUES ($1, $2)
+			ON CONFLICT (id) DO UPDATE SET state = NOT {table_name}.state
+		""", id, default)
+
+	async def toggle_user_state(self, user_id, guild_id=None) -> bool:
+		"""Toggle whether the user has opted in to the bot.
+		If the user does not have an entry already:
+			If the guild_id is provided and not None, the user's state is set to the opposite of the guilds'
+			Otherwise, the user's state is set to False (opted out), since the default state is True.
+		Returns the new state.
+		"""
+		default = False
+		guild_state = await self.get_guild_state(guild_id)
+		if guild_state is not None:
+			# if the auto response is enabled for the guild then toggling the user state should opt out
+			default = not guild_state
+		await self._toggle_state('user_opt', user_id, default)
+		return await self.get_user_state(user_id)
+
+	async def toggle_guild_state(self, guild_id):
+		"""Togle whether this guild is opt out.
+		If this guild is opt in, the shout auto response will be disabled
+		except for users that have opted in to it using `toggle_user_state`.
+		Otherwise, the response will be on for all users except those that have opted out.
+		"""
+		await self._toggle_state('guild_opt', guild_id, False)
+		return await self.get_guild_state(guild_id)
+
+	@wait
+	async def _get_state(self, table_name, id):
+		# unfortunately, using $1 for table_name is a syntax error
+		# however, since table name is always hardcoded input from other functions in this module,
+		# it's ok to use string formatting here
+		return await self._pool.fetchval(f'SELECT state FROM {table_name} WHERE id = $1', id)
+
+	async def get_user_state(self, user_id):
+		"""return this user's global preference for the shout auto response and logging"""
+		return await self._get_state('user_opt', user_id)
+
+	async def get_guild_state(self, guild_id):
+		"""return whether this guild is opt in"""
+		return await self._get_state('guild_opt', guild_id)
+
+	async def get_state(self, guild_id, user_id):
+		state = True
+
+		guild_state = await self.get_guild_state(guild_id)
+		if guild_state is not None:
+			state = guild_state
+
+		user_state = await self.get_user_state(user_id)
+		if user_state is not None:
+			state = user_state  # user state overrides guild state
+
+		return state
+
 	async def _init_db(self):
 		credentials = self.bot.config['database']
 
