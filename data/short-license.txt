@@ -1,1 +1,1 @@
-MIT: https://github.com/bmintz/CaptainCapslock/blob/master/LICENSE
+MIT: https://github.com/bmintz/CAPTAIN-CAPSLOCK/blob/master/LICENSE
