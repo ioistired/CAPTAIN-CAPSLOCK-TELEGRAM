@@ -2,6 +2,7 @@
 	"startup_extensions": [
 		"extensions.db",
 		"extensions.shout",
+		"extensions.meta",
 		"ben_cogs.misc",
 		"ben_cogs.stats",
 		"jishaku"],
