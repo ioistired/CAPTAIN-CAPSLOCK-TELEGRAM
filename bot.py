@@ -25,7 +25,7 @@ async def on_message(message):
 	if not is_shout(message.content) or message.author.bot:
 		return
 
-	shout = await get_random_shout()
+	shout = await get_random_shout(get_guild_or_user(message))
 	if shout: await message.channel.send(shout)
 	await save_shout(message)
 
@@ -35,9 +35,6 @@ async def on_raw_message_edit(payload):
 		return
 
 	id = payload.message_id
-	if not await pool.fetchval('SELECT 1 FROM shout WHERE id = $1', id):
-		return
-
 	content = payload.data['content']
 	if not is_shout(content):
 		# don't let people sneakily insert non-shouts into the database
@@ -46,10 +43,10 @@ async def on_raw_message_edit(payload):
 
 	content = sanitize(content)
 	try:
-		await pool.execute('UPDATE shout SET content = $1 WHERE id = $2', content, id)
+		await pool.execute('UPDATE shout SET content = $1 WHERE message = $2', content, id)
 	except asyncpg.UniqueViolationError:
 		# don't store duplicate shouts
-		await pool.execute('DELETE FROM shout WHERE id = $1', id)
+		await pool.execute('DELETE FROM shout WHERE message = $1', id)
 
 @client.event
 async def on_raw_message_delete(payload):
@@ -60,30 +57,51 @@ async def on_raw_bulk_message_delete(payload):
 	for id in payload.message_ids:
 		await delete_shout(id)
 
+@client.event
+async def on_guild_remove(guild):
+	await pool.execute('DELETE FROM shout WHERE guild_or_user = $1', guild.id)
+
 ## DATABASE
 
 async def save_shout(message):
+	guild_or_user = get_guild_or_user(message)
 	await pool.execute("""
-		INSERT INTO shout(id, content)
-		VALUES($1, $2)
+		INSERT INTO shout(guild_or_user, message, content)
+		VALUES($1, $2, $3)
 		ON CONFLICT DO NOTHING
-	""", message.id, sanitize(message.content))
+	""", guild_or_user, message.id, sanitize(message.content))
 
-async def get_random_shout():
-	return await pool.fetchval("""
+async def get_random_shout(guild_or_user=None):
+	args = []
+	query = """
 		SELECT content
 		FROM shout
+	"""
+
+	if guild_or_user is not None:
+		query += 'WHERE guild_or_user = $1'
+		args.append(guild_or_user)
+
+	query += """
 		ORDER BY random()
 		LIMIT 1
-	""")
+	"""
+
+	return await pool.fetchval(query, *args)
 
 async def get_shout(message_id):
-	return await pool.fetchval('SELECT content FROM shout WHERE id = $1', message_id)
+	return await pool.fetchval('SELECT content FROM shout WHERE message = $1', message_id)
 
 async def delete_shout(message_id):
-	await pool.execute('DELETE FROM shout WHERE id = $1', message_id)
+	await pool.execute('DELETE FROM shout WHERE message = $1', message_id)
 
 ## MISC
+
+def get_guild_or_user(message):
+	try:
+		return message.channel.guild.id
+	except AttributeError:
+		return message.author.id
 
 def sanitize(s):
 	s = re.sub(r'<@!?\d+>', '@SOMEONE', s, re.ASCII)
