@@ -90,7 +90,7 @@ class Database:
 
 		await pool.execute(schema)
 		self._pool = pool
-		await self.ready.set()
+		self.ready.set()
 
 def sanitize(s):
 	s = re.sub(r'<@!?\d+>', '@SOMEONE', s, re.ASCII)
