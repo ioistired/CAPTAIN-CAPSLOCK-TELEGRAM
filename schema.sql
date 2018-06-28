@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS shout (
 	content TEXT NOT NULL UNIQUE,
 	time TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'UTC')
 );
+CREATE INDEX IF NOT EXISTS shout_guild_or_user_idx ON shout (guild_or_user);
 
 -- https://stackoverflow.com/a/26284695/1378440
 CREATE OR REPLACE FUNCTION update_time_column()
