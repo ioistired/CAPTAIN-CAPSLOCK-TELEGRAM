@@ -1,0 +1,1 @@
+MIT: https://github.com/bmintz/LOUDBOT/blob/master/LICENSE
