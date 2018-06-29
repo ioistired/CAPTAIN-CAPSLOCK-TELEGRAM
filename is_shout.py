@@ -4,8 +4,6 @@ from sys import maxunicode
 
 def is_shout(str):
 	length = len(str)
-	if length < 2: return False
-
 	count = 0
 
 	for c in str:
@@ -14,7 +12,7 @@ def is_shout(str):
 		if c in UPPERCASE_LETTERS:
 			count += 1
 
-	return bool(length) and count / length > 0.5
+	return length >= 4 and count / length > 0.5
 
 def get_derived_core_properties():
 	properties = {}
