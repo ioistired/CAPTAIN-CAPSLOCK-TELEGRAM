@@ -50,4 +50,3 @@ class CaptainCapslock(commands.AutoShardedBot):
 
 if __name__ == '__main__':
 	CaptainCapslock().run()
-
