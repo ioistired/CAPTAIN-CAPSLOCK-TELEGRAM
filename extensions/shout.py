@@ -63,7 +63,7 @@ class Shout:
 		await context.send(f'Shout auto response is now {new_state} for this server.')
 
 	async def on_message(self, message):
-		if not is_shout(message.content):
+		if not is_shout(message.content) or not self.bot.should_reply(message):
 			return
 
 		context = await self.bot.get_context(message)
