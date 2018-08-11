@@ -27,6 +27,35 @@ class CaptainCapslock(commands.AutoShardedBot):
 	async def on_ready(self):
 		logger.info('Ready')
 
+	async def on_message(self, message):
+		if self.should_reply(message):
+			await self.process_commands(message)
+
+	def should_reply(self, message):
+		"""return whether the bot should reply to a given message"""
+		return not (
+			message.author == self.user
+			or (message.author.bot and not self._should_reply_to_bot(message))
+			or not message.content)
+
+	def _should_reply_to_bot(self, message):
+		if not self.config.get('ignore_bots'):
+			return
+
+		should_reply = not self.config['ignore_bots'].get('default')
+		overrides = self.config['ignore_bots']['overrides']
+
+		def check_override(location, overrides_key):
+			if not isinstance(overrides[overrides_key], frozenset):
+				# make future lookups faster
+				overrides[overrides_key] = frozenset(overrides[overrides_key])
+			return location and location.id in overrides[overrides_key]
+
+		if check_override(message.guild, 'guilds') or check_override(message.channel, 'channels'):
+			should_reply = not should_reply
+
+		return should_reply
+
 	async def on_command_error(self, context, error):
 		if isinstance(error, commands.NoPrivateMessage):
 			await context.author.send('This command cannot be used in private messages.')

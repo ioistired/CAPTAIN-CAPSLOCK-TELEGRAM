@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+import logging
+
 from discord.ext import commands
 
-from is_shout import is_shout
+from utils.shout import is_shout
+
+logger = logging.getLogger(__name__)
 
 # Used under the MIT license. Copyright (c) 2017 BeatButton
 # https://github.com/BeatButton/beattie/blob/44fd795aef7b1c19233510cda8046baab5ecabf3/utils/checks.py
@@ -59,12 +63,12 @@ class Shout:
 		await context.send(f'Shout auto response is now {new_state} for this server.')
 
 	async def on_message(self, message):
-		if not is_shout(message.content) or message.author.bot:
+		if not is_shout(message.content):
 			return
 
 		context = await self.bot.get_context(message)
 		if context.command:
-			# don't respond if the user has sent a command
+			# don't respond here if the user has sent a command
 			return
 
 		if message.guild:
@@ -76,7 +80,7 @@ class Shout:
 			return
 
 		shout = await self.db.get_random_shout(message)
-		if shout: await message.channel.send(shout)
+		if shout: await message.channel.send(shout)  # := when
 		await self.db.save_shout(message)
 
 	async def on_raw_message_edit(self, payload):

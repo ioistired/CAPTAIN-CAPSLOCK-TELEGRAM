@@ -5,6 +5,7 @@
 		"extensions.meta",
 		"ben_cogs.misc",
 		"ben_cogs.stats",
+		"ben_cogs.debug",
 		"jishaku"],
 
 	"client_id": 1234567,
@@ -24,4 +25,16 @@
 		"discord": "sek.rit.token",
 		"stats": {
 			"bots.discord.pw": null,
-			"discordbots.org": null}}}
+			"discordbots.org": null
+		}
+	},
+
+	"ignore_bots": {
+		"default": true,
+
+		"overrides": {
+			"guilds": [],
+			"channels": []
+		}
+	}
+}
