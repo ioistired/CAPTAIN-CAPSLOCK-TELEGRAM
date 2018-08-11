@@ -39,8 +39,11 @@ class CaptainCapslock(commands.AutoShardedBot):
 			or not message.content)
 
 	def _should_reply_to_bot(self, message):
+		if message.author == self.user:
+			return False
+
 		if not self.config.get('ignore_bots'):
-			return
+			return False
 
 		should_reply = not self.config['ignore_bots'].get('default')
 		overrides = self.config['ignore_bots']['overrides']
