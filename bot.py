@@ -5,6 +5,7 @@ import logging
 import json
 import traceback
 
+import discord
 from discord.ext import commands
 
 logging.basicConfig(level=logging.WARN)
@@ -16,7 +17,10 @@ class CaptainCapslock(commands.AutoShardedBot):
 		with open('data/config.json') as f:
 			self.config = json.load(f)
 
-		super().__init__(*args, command_prefix=commands.when_mentioned, **kwargs)
+		super().__init__(
+			*args,
+			activity=discord.Activity(type=discord.ActivityType.watching, name='YOU SCREAM'),
+			command_prefix=commands.when_mentioned)
 
 	def run(self):
 		for extension in self.config['startup_extensions']:
