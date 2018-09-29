@@ -13,13 +13,15 @@ logger = logging.getLogger('bot')
 logger.setLevel(logging.INFO)
 
 class CaptainCapslock(commands.AutoShardedBot):
+	activity = discord.Activity(type=discord.ActivityType.watching, name='YOU SCREAM')
+
 	def __init__(self, *args, **kwargs):
 		with open('data/config.json') as f:
 			self.config = json.load(f)
 
 		super().__init__(
 			*args,
-			activity=discord.Activity(type=discord.ActivityType.watching, name='YOU SCREAM'),
+			activity=self.activity,
 			command_prefix=commands.when_mentioned)
 
 	def run(self):
@@ -29,6 +31,7 @@ class CaptainCapslock(commands.AutoShardedBot):
 		super().run(self.config['tokens']['discord'])
 
 	async def on_ready(self):
+		await self.change_presence(activity=self.activity)
 		logger.info('Ready')
 
 	async def on_message(self, message):
