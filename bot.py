@@ -22,7 +22,8 @@ class CaptainCapslock(commands.AutoShardedBot):
 		super().__init__(
 			*args,
 			activity=self.activity,
-			command_prefix=commands.when_mentioned)
+			command_prefix=commands.when_mentioned,
+			case_insensitive=True)
 
 	def run(self):
 		for extension in self.config['startup_extensions']:
