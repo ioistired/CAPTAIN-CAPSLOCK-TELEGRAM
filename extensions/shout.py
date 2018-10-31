@@ -37,10 +37,10 @@ class Shout:
 		if context.guild is not None:
 			guild = context.guild.id
 		if await self.db.toggle_user_state(context.author.id, guild):
-			action = 'in to'
+			action = 'IN TO'
 		else:
-			action = 'out of'
-		await context.send(f'Opted {action} the shout auto response.')
+			action = 'OUT OF'
+		await context.send(f'OPTED {action} THE SHOUT AUTO RESPONSE.')
 
 	@commands.command(name='toggleserver', aliases=['toggle-server'])
 	@owner_or_permissions(manage_messages=True)
