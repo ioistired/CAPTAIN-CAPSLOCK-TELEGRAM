@@ -5,7 +5,7 @@
 		"extensions.meta",
 		"ben_cogs.misc",
 		"ben_cogs.stats",
-		"jishaku"],
+		"ben_cogs.ie_jishaku"],
 
 	"client_id": 1234567,
 	"send_logs_to": 1234567,
