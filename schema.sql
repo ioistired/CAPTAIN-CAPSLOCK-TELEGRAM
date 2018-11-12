@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS shout (
 	guild_or_user BIGINT NOT NULL,
 	message BIGINT NOT NULL PRIMARY KEY,
 	content TEXT NOT NULL,
-	time TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'UTC'));
+	time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP);
 
 -- old constraint on message content being globally unique
 ALTER TABLE shout DROP CONSTRAINT IF EXISTS shout_content_key;
@@ -12,10 +12,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS shout_guild_content_unique_idx ON shout (guild
 
 -- https://stackoverflow.com/a/26284695/1378440
 CREATE OR REPLACE FUNCTION update_time_column()
-RETURNS TRIGGER AS $$
-BEGIN
+RETURNS TRIGGER AS $$ BEGIN
 	IF row(NEW.content) IS DISTINCT FROM row(OLD.content) THEN
-		NEW.time = now() AT TIME ZONE 'UTC';
+		NEW.time = CURRENT_TIMESTAMP;
 		RETURN NEW;
 	ELSE
 		RETURN OLD; END IF; END; $$ language 'plpgsql';
