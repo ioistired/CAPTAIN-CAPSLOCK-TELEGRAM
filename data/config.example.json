@@ -36,5 +36,7 @@
 			"guilds": [],
 			"channels": []
 		}
-	}
+	},
+
+	"success_or_failure_emojis": {False: "❌", True: "✅"}
 }

@@ -18,6 +18,7 @@ class CaptainCapslock(commands.AutoShardedBot):
 	def __init__(self, *args, **kwargs):
 		with open('data/config.json') as f:
 			self.config = json.load(f)
+		self._process_config()
 
 		super().__init__(
 			*args,
@@ -25,6 +26,9 @@ class CaptainCapslock(commands.AutoShardedBot):
 			command_prefix=commands.when_mentioned,
 			case_insensitive=True,
 			formatter=CapsFormatter())
+
+	def _process_config(self):
+		self.config.setdefault('success_or_failure_emojis', ('❌', '✅'))
 
 	def run(self):
 		for extension in self.config['startup_extensions']:
