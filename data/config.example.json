@@ -6,7 +6,7 @@
 		"ben_cogs.misc",
 		"ben_cogs.stats",
 		"ben_cogs.debug",
-		"jishaku"],
+		"ben_cogs.ie_jishaku"],
 
 	"client_id": 1234567,
 	"send_logs_to": 1234567,
