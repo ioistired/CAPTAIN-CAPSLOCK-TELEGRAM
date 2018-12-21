@@ -1,8 +1,13 @@
 import functools
 import itertools
+import re
 from sys import maxunicode
 
+codeblock = re.compile(r'(`{1,3}).+?\\1', re.DOTALL)
+
 def is_shout(str):
+	str = codeblock.sub(str, '')
+
 	length = len(str)
 	count = 0
 
