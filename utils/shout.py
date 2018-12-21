@@ -5,6 +5,8 @@ from sys import maxunicode
 
 codeblock = re.compile(r'(`{1,3}).+?\1', re.DOTALL)
 
+# if the amount of shadowing builtins that i do bothers you, please fix your syntax highlighter
+
 def is_shout(str):
 	str = codeblock.sub('', str)
 	length = len(str)
@@ -21,10 +23,12 @@ def is_shout(str):
 def get_derived_core_properties():
 	properties = {}
 
+	# TODO use paths relative to this file rather than to the interpreter
 	with open('data/DerivedCoreProperties.txt') as f:
 		for line in map(str.strip, f):
 			if line.startswith('#') or not line:
 				continue
+
 			# ignore trailing comments too
 			line = ''.join(itertools.takewhile(lambda c: c != '#', line))
 
@@ -49,7 +53,7 @@ def inclusive_range(start, stop=None, step=1):
 
 	return range(start, stop, step)
 
-UPPERCASE_LETTERS = frozenset(filter(str.isupper, map(chr, range(maxunicode+1))))
+UPPERCASE_LETTERS = frozenset(filter(str.isupper, map(chr, range(maxunicode + 1))))
 DERIVED_CORE_PROPERTIES = get_derived_core_properties()
 DEFAULT_IGNORABLE = DERIVED_CORE_PROPERTIES['Default_Ignorable_Code_Point']
-del DERIVED_CORE_PROPERTIES  # comment if you need that, but we wanna save space
+del DERIVED_CORE_PROPERTIES  # comment if you need that, but we wanna save memory
