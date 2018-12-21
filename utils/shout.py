@@ -3,11 +3,11 @@ import itertools
 import re
 from sys import maxunicode
 
-codeblock = re.compile(r'(`{1,3}).+?\\1', re.DOTALL)
+codeblock = re.compile(r'(`{1,3}).+?\1', re.DOTALL)
 
 def is_shout(str):
-	str = codeblock.sub(str, '')
-
+	str = codeblock.sub('', str)
+	print(str)
 	length = len(str)
 	count = 0
 
