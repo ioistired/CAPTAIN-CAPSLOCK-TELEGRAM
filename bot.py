@@ -7,6 +7,7 @@ import traceback
 
 import discord
 from discord.ext import commands
+import simple_help_formatter
 
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger('bot')
@@ -92,7 +93,7 @@ class CaptainCapslock(commands.AutoShardedBot):
 			# pylint: disable=logging-format-interpolation
 			logger.error('{0.__class__.__name__}: {0}'.format(error.original))
 
-class CapsFormatter(commands.HelpFormatter):
+class CapsFormatter(simple_help_formatter.HelpFormatter):
 	async def format(self):
 		return map(str.upper, await super().format())
 
