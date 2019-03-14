@@ -21,7 +21,7 @@ class Database(commands.Cog):
 		self.ready = asyncio.Event()
 		self._init_db_task = self.bot.loop.create_task(self._init_db())
 
-	def __unload(self):
+	def cog_unload(self):
 		self._init_db_task.cancel()
 
 		try:
