@@ -6,6 +6,7 @@ from functools import wraps
 import re
 
 import asyncpg
+from discord.ext import commands
 
 def wait(func):
 	@wraps(func)
@@ -14,7 +15,7 @@ def wait(func):
 		return await func(self, *args, **kwargs)
 	return wrapped
 
-class Database:
+class Database(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.ready = asyncio.Event()
@@ -139,6 +140,8 @@ class Database:
 		return state
 
 	async def _init_db(self):
+		# TODO move this to an overriden bot.start
+
 		credentials = self.bot.config['database']
 
 		try:

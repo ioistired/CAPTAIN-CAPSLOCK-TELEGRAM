@@ -4,17 +4,17 @@
 import contextlib
 
 import discord.utils
-from discord.ext.commands import command
+from discord.ext import commands
 
-class Meta:
+class Meta(commands.Cog):
 	"""Commands pertaining to the bot itself."""
 
-	@command()
+	@commands.command()
 	async def invite(self, context):
 		"""Gives you a link to add me to your server."""
 		await context.send('<%s>' % discord.utils.oauth_url(context.bot.config['client_id']))
 
-	@command()
+	@commands.command()
 	async def support(self, context):
 		"""Directs you to the support server."""
 		try:

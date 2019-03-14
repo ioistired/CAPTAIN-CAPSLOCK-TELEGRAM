@@ -21,7 +21,7 @@ def owner_or_permissions(**perms):
 				   for perm, value in perms.items())
 	return commands.check(predicate)
 
-class Shout:
+class Shout(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.db = self.bot.get_cog('Database')
@@ -62,6 +62,7 @@ class Shout:
 			new_state = 'opt-in'
 		await context.send(f'Shout auto response is now {new_state} for this server.')
 
+	@commands.Cog.listener()
 	async def on_message(self, message):
 		if not is_shout(message.content) or not self.bot.should_reply(message):
 			return
@@ -83,6 +84,7 @@ class Shout:
 		if shout: await message.channel.send(shout)  # := when
 		await self.db.save_shout(message)
 
+	@commands.Cog.listener()
 	async def on_raw_message_edit(self, payload):
 		if 'webhook_id' in payload.data or 'content' not in payload.data:
 			return
@@ -96,14 +98,18 @@ class Shout:
 
 		await self.db.update_shout(id, content)
 
+	@commands.Cog.listener()
 	async def on_raw_message_delete(self, payload):
 		await self.db.delete_shout(payload.message_id)
 
+	@commands.Cog.listener()
 	async def on_raw_bulk_message_delete(self, payload):
 		for id in payload.message_ids:
 			await self.db.delete_shout(id)
 
+	@commands.Cog.listener()
 	async def on_guild_remove(self, guild):
+		# TODO also handle inconsistency caused by a guild being removed while the bot is offline
 		await self.db.delete_by_guild_or_user(guild.id)
 
 def setup(bot):
