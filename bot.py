@@ -7,7 +7,6 @@ import traceback
 
 import discord
 from discord.ext import commands
-import simple_help_formatter
 
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger('bot')
@@ -25,8 +24,8 @@ class CaptainCapslock(commands.AutoShardedBot):
 			*args,
 			activity=self.activity,
 			command_prefix=commands.when_mentioned,
-			case_insensitive=True,
-			formatter=CapsFormatter())
+			help_command=CapsHelpCommand(),
+			case_insensitive=True)
 
 	def _process_config(self):
 		self.config.setdefault('success_or_failure_emojis', ('❌', '✅'))
@@ -93,9 +92,11 @@ class CaptainCapslock(commands.AutoShardedBot):
 			# pylint: disable=logging-format-interpolation
 			logger.error('{0.__class__.__name__}: {0}'.format(error.original))
 
-class CapsFormatter(simple_help_formatter.HelpFormatter):
-	async def format(self):
-		return map(str.upper, await super().format())
+class CapsHelpCommand(commands.MinimalHelpCommand):
+	async def send_pages(self):
+		destination = self.get_destination()
+		for page in self.paginator.pages:
+			await destination.send(page.upper())
 
 if __name__ == '__main__':
 	CaptainCapslock().run()
