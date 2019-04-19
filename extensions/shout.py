@@ -104,8 +104,7 @@ class Shout(commands.Cog):
 
 	@commands.Cog.listener()
 	async def on_raw_bulk_message_delete(self, payload):
-		for id in payload.message_ids:
-			await self.db.delete_shout(id)
+		await self.db.delete_shouts(payload.message_ids)
 
 	@commands.Cog.listener()
 	async def on_guild_remove(self, guild):

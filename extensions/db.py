@@ -75,6 +75,10 @@ class Database(commands.Cog):
 		await self._pool.execute('DELETE FROM shout WHERE message = $1', message_id)
 
 	@wait
+	async def delete_shouts(self, message_ids):
+		await self._pool.executemany('DELETE FROM shout WHERE message = $1', [(id,) for id in message_ids])
+
+	@wait
 	async def delete_by_guild_or_user(self, guild_or_user):
 		await self._pool.execute('DELETE FROM shout WHERE guild_or_user = $1', guild_or_user)
 
