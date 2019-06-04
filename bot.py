@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+import contextlib
 import logging
 import json
 import traceback
 
+import asyncpg
 import discord
 from discord.ext import commands
 
@@ -71,6 +73,24 @@ class CaptainCapslock(commands.AutoShardedBot):
 			should_reply = not should_reply
 
 		return should_reply
+
+	async def login(self, token, *, bot=True):
+		token = self.config['tokens'].pop('discord')
+		credentials = self.config.pop('database')
+
+		try:
+			self.pool = await asyncpg.create_pool(credentials['url'])
+		except KeyError:
+			self.pool = await asyncpg.create_pool(**credentials)
+
+		await super().login(token, bot=bot)
+
+	async def close(self):
+		try:
+			await super().close()
+		finally:
+			with contextlib.suppress(AttributeError):
+				await self.pool.close()
 
 	async def on_command_error(self, context, error):
 		if isinstance(error, commands.NoPrivateMessage):
