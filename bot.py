@@ -17,10 +17,9 @@ logger.setLevel(logging.INFO)
 class CaptainCapslock(commands.AutoShardedBot):
 	activity = discord.Activity(type=discord.ActivityType.watching, name='YOU SCREAM')
 
-	def __init__(self, *args, **kwargs):
-		with open('data/config.json') as f:
-			self.config = json.load(f)
-		self._process_config()
+	def __init__(self, config, *args, **kwargs):
+		self.config = config
+		self.process_config()
 
 		super().__init__(
 			*args,
@@ -29,8 +28,16 @@ class CaptainCapslock(commands.AutoShardedBot):
 			help_command=CapsHelpCommand(),
 			case_insensitive=True)
 
-	def _process_config(self):
+	def process_config(self):
 		self.config.setdefault('success_or_failure_emojis', ('❌', '✅'))
+
+		ignore_bots_conf = self.config.setdefault('ignore_bots', {})
+		ignore_bots_conf.setdefault('default', True)
+		overrides_conf = ignore_bots_conf.setdefault('overrides', {})
+		overrides_conf.setdefault('guilds', ())
+		overrides_conf.setdefault('channels', ())
+		overrides_conf['guilds'] = set(overrides_conf['guilds'])
+		overrides_conf['channels'] = set(overrides_conf['channels'])
 
 	def run(self):
 		for extension in self.config['startup_extensions']:
@@ -57,16 +64,10 @@ class CaptainCapslock(commands.AutoShardedBot):
 		if message.author == self.user:
 			return False
 
-		if not self.config.get('ignore_bots'):
-			return False
-
-		should_reply = not self.config['ignore_bots'].get('default')
+		should_reply = not self.config['ignore_bots']['default']
 		overrides = self.config['ignore_bots']['overrides']
 
 		def check_override(location, overrides_key):
-			if not isinstance(overrides[overrides_key], frozenset):
-				# make future lookups faster
-				overrides[overrides_key] = frozenset(overrides[overrides_key])
 			return location and location.id in overrides[overrides_key]
 
 		if check_override(message.guild, 'guilds') or check_override(message.channel, 'channels'):
@@ -119,4 +120,7 @@ class CapsHelpCommand(commands.MinimalHelpCommand):
 			await destination.send(page.upper())
 
 if __name__ == '__main__':
-	CaptainCapslock().run()
+	with open('data/config.json') as f:
+		config = json.load(f)
+
+	CaptainCapslock(config).run()
