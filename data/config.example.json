@@ -1,13 +1,4 @@
 {
-	"startup_extensions": [
-		"extensions.db",
-		"extensions.shout",
-		"extensions.meta",
-		"ben_cogs.misc",
-		"ben_cogs.stats",
-		"ben_cogs.debug",
-		"ben_cogs.ie_jishaku"],
-
 	"client_id": 1234567,
 	"send_logs_to": 1234567,
 	"copyright_license_file": "data/short-license.txt",

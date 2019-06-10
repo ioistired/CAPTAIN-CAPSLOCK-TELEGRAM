@@ -1,4 +1,4 @@
 asyncpg
-ben_cogs
+ben_cogs[sql]
 discord.py>=1.0.1, <2.0.0
 jishaku

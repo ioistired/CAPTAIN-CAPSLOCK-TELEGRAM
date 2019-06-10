@@ -39,12 +39,6 @@ class CaptainCapslock(commands.AutoShardedBot):
 		overrides_conf['guilds'] = set(overrides_conf['guilds'])
 		overrides_conf['channels'] = set(overrides_conf['channels'])
 
-	def run(self):
-		for extension in self.config['startup_extensions']:
-			self.load_extension(extension)
-			logger.info('loaded extension %s successfully', extension)
-		super().run(self.config['tokens']['discord'])
-
 	async def on_ready(self):
 		await self.change_presence(activity=self.activity)
 		logger.info('Ready')
@@ -112,6 +106,39 @@ class CaptainCapslock(commands.AutoShardedBot):
 			logger.error(''.join(traceback.format_tb(error.original.__traceback__)))
 			# pylint: disable=logging-format-interpolation
 			logger.error('{0.__class__.__name__}: {0}'.format(error.original))
+
+	async def login(self, *args, **kwargs):
+		await self._init_db()
+		self._load_extensions()
+		token = self.config['tokens'].pop('discord')
+		await super().login(token, **kwargs)
+
+	async def _init_db(self):
+		credentials = self.config.pop('database')
+
+		try:
+			self.pool = await asyncpg.create_pool(credentials['url'])
+		except KeyError:
+			self.pool = await asyncpg.create_pool(**credentials)
+
+	def _load_extensions(self):
+		for extension in [
+			'extensions.db',
+			'extensions.shout',
+			'extensions.meta',
+			'ben_cogs.misc',
+			'ben_cogs.stats',
+			'ben_cogs.sql',
+			'jishaku'
+		]:
+			self.load_extension(extension)
+			logger.info('loaded extension %s successfully', extension)
+
+	async def close(self):
+		with contextlib.suppress(AttributeError):
+			await self.pool.close()
+		await super().close()
+
 
 class CapsHelpCommand(commands.MinimalHelpCommand):
 	async def send_pages(self):
