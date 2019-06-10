@@ -69,24 +69,6 @@ class CaptainCapslock(commands.AutoShardedBot):
 
 		return should_reply
 
-	async def login(self, token, *, bot=True):
-		token = self.config['tokens'].pop('discord')
-		credentials = self.config.pop('database')
-
-		try:
-			self.pool = await asyncpg.create_pool(credentials['url'])
-		except KeyError:
-			self.pool = await asyncpg.create_pool(**credentials)
-
-		await super().login(token, bot=bot)
-
-	async def close(self):
-		try:
-			await super().close()
-		finally:
-			with contextlib.suppress(AttributeError):
-				await self.pool.close()
-
 	async def on_command_error(self, context, error):
 		if isinstance(error, commands.NoPrivateMessage):
 			await context.author.send('THIS COMMAND CANNOT BE USED IN PRIVATE MESSAGES.')
@@ -135,9 +117,11 @@ class CaptainCapslock(commands.AutoShardedBot):
 			logger.info('loaded extension %s successfully', extension)
 
 	async def close(self):
-		with contextlib.suppress(AttributeError):
-			await self.pool.close()
-		await super().close()
+		try:
+			await super().close()
+		finally:
+			with contextlib.suppress(AttributeError):
+				await self.pool.close()
 
 
 class CapsHelpCommand(commands.MinimalHelpCommand):
