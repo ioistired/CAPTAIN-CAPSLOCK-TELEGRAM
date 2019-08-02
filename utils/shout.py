@@ -1,6 +1,7 @@
 import functools
 import itertools
 import re
+from pathlib import Path
 from sys import maxunicode
 
 codeblock = re.compile(r'(`{1,3}).+?\1', re.DOTALL)
@@ -23,8 +24,7 @@ def is_shout(str):
 def get_derived_core_properties():
 	properties = {}
 
-	# TODO use paths relative to this file rather than to the interpreter
-	with open('data/DerivedCoreProperties.txt') as f:
+	with open(Path(__file__).parent.parent / 'data' / 'DerivedCoreProperties.txt') as f:
 		for line in map(str.strip, f):
 			if line.startswith('#') or not line:
 				continue
