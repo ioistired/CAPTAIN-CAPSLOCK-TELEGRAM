@@ -23,7 +23,7 @@ def is_shout_word(word):
 
 	if length < 3:
 		return None
-	return count / length >= 0.9
+	return count / length > 0.5
 
 properties_path = Path(__file__).parent.parent / 'data' / 'DerivedCoreProperties.txt'
 
