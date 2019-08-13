@@ -89,7 +89,7 @@ class CaptainCapslock(commands.AutoShardedBot):
 			# pylint: disable=logging-format-interpolation
 			logger.error('{0.__class__.__name__}: {0}'.format(error.original))
 
-	async def login(self, *args, **kwargs):
+	async def login(self, token=None, **kwargs):
 		await self._init_db()
 		self._load_extensions()
 		token = self.config['tokens'].pop('discord')
