@@ -2,12 +2,19 @@
 # encoding: utf-8
 
 import logging
+import re
 
 from discord.ext import commands
 
-from utils.shout import is_shout
+import utils.shout
 
 logger = logging.getLogger(__name__)
+CODEBLOCK_RE = re.compile(r'(`{1,3}).+?\1', re.DOTALL)
+MENTION_RE = re.compile(r'<(?:&|#|@!?)\d+>|@everyone|@here', re.ASCII)
+
+def is_shout(content):
+	without_code = CODEBLOCK_RE.sub('', content)
+	return utils.shout.is_shout(MENTION_RE.sub('', without_code))
 
 # Used under the MIT license. Copyright (c) 2017 BeatButton
 # https://github.com/BeatButton/beattie/blob/44fd795aef7b1c19233510cda8046baab5ecabf3/utils/checks.py
@@ -72,31 +79,36 @@ class Shout(commands.Cog):
 			# don't respond here if the user has sent a command
 			return
 
-		if message.guild:
-			guild = message.guild.id
-		else:
-			guild = None
+		guild = message.guild and message.guild.id
 
 		if not await self.db.get_state(guild, message.author.id):
 			return
 
 		shout = await self.db.get_random_shout(message)
 		if shout: await message.channel.send(shout)  # := when
-		await self.db.save_shout(message)
+		sanitized = self.bot.clean_content(content=message.content, guild=message.guild)
+		await self.db.save_shout(message, sanitized)
 
 	@commands.Cog.listener()
 	async def on_raw_message_edit(self, payload):
-		if 'webhook_id' in payload.data or 'content' not in payload.data:
+		if 'webhook_id' in payload.data:
 			return
 
 		id = payload.message_id
-		content = payload.data['content']
+		if 'content' not in payload.data:
+			message = payload.cached_message or await self.bot.get_channel(payload.channel_id).fetch_message(id)
+			content = message.content
+			guild = message.guild
+		else:
+			guild = 'guild_id' in payload.data and self.bot.get_guild(payload.data['guild_id'])
+			content = payload.data['content']
+
 		if not is_shout(content):
 			# don't let people sneakily insert non-shouts into the database
 			await self.db.delete_shout(id)
 			return
 
-		await self.db.update_shout(id, content)
+		await self.db.update_shout(id, self.bot.clean_content(content=content, guild=guild))
 
 	@commands.Cog.listener()
 	async def on_raw_message_delete(self, payload):

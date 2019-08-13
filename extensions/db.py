@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-import re
-
 import asyncpg
 from discord.ext import commands
 
@@ -10,21 +8,22 @@ class Database(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	async def update_shout(self, message, content):
-		content = sanitize(content)
+	async def update_shout(self, message_id, content):
 		try:
-			await self.bot.pool.execute('UPDATE shout SET content = $1 WHERE message = $2', content, message)
+			await self.bot.pool.execute(
+				'UPDATE shout SET content = $2 WHERE message = $1',
+				message_id, content)
 		except asyncpg.UniqueViolationError:
 			# don't store duplicate shouts
-			await self.bot.pool.execute('DELETE FROM shout WHERE message = $1', message)
+			await self.bot.pool.execute('DELETE FROM shout WHERE message = $1', message_id)
 
-	async def save_shout(self, message):
+	async def save_shout(self, message, content):
 		guild_or_user = get_guild_or_user(message)
 		await self.bot.pool.execute("""
 			INSERT INTO shout(guild_or_user, message, content)
 			VALUES($1, $2, $3)
 			ON CONFLICT DO NOTHING
-		""", guild_or_user, message.id, sanitize(message.content))
+		""", guild_or_user, message.id, content)
 
 	async def get_random_shout(self, message=None):
 		args = []
@@ -114,14 +113,6 @@ class Database(commands.Cog):
 			state = user_state  # user state overrides guild state
 
 		return state
-
-def sanitize(s):
-	s = re.sub(r'<@!?\d+>', '@SOMEONE', s, re.ASCII)
-	s = re.sub(r'<@&\d+>',  '@SOME ROLE', s, re.ASCII)
-	s = s.replace('@everyone', '@EVERYONE')
-	s = s.replace('@here', f'@HERE')
-
-	return s
 
 def get_guild_or_user(message):
 	try:

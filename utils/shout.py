@@ -1,15 +1,11 @@
 import functools
 import itertools
-import re
 from pathlib import Path
 from sys import maxunicode
-
-codeblock = re.compile(r'(`{1,3}).+?\1', re.DOTALL)
 
 # if the amount of shadowing builtins that i do bothers you, please fix your syntax highlighter
 
 def is_shout(str):
-	str = codeblock.sub('', str)
 	length = len(str)
 	count = 0
 

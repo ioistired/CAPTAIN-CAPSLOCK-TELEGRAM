@@ -4,6 +4,7 @@
 import contextlib
 import logging
 import json
+import re
 import traceback
 
 import asyncpg
@@ -123,6 +124,69 @@ class CaptainCapslock(commands.AutoShardedBot):
 			with contextlib.suppress(AttributeError):
 				await self.pool.close()
 
+	# Using code provided by Rapptz under the MIT License
+	# Copyright © 2015–2019 Rapptz
+	# https://github.com/Rapptz/discord.py/blob/v1.2.3/discord/ext/commands/converter.py#L459-L530
+	def clean_content(
+		self,
+		*,
+		guild,
+		content,
+		fix_channel_mentions=False,
+		use_nicknames=True,
+		escape_markdown=False,
+	):
+		transformations = {}
+
+		if fix_channel_mentions and guild:
+			def resolve_channel(id, *, _get=message.guild.get_channel):
+				ch = _get(id)
+				return ('<#%s>' % id), ('#' + ch.name if ch else '#deleted-channel')
+
+			transformations.update(resolve_channel(int(channel)) for channel in re.findall(r'<#([0-9]+)>', content))
+
+		if use_nicknames and guild:
+			def resolve_member(id, *, _get=guild.get_member):
+				m = _get(id)
+				return '@' + m.display_name if m else '@deleted-user'
+		else:
+			def resolve_member(id, *, _get=self.get_user):
+				m = _get(id)
+				return '@' + m.name if m else '@deleted-user'
+
+		raw_mentions = [int(x) for x in re.findall(r'<@!?([0-9]+)>', content)]
+
+		transformations.update(
+			('<@%s>' % member_id, resolve_member(member_id))
+			for member_id in raw_mentions
+		)
+
+		transformations.update(
+			('<@!%s>' % member_id, resolve_member(member_id))
+			for member_id in raw_mentions
+		)
+
+		if guild:
+			def resolve_role(id):
+				r = guild.get_role(id)
+				return '@' + r.name if r else '@deleted-role'
+
+			transformations.update(
+				('<@&%s>' % role_id, resolve_role(int(role_id)))
+				for role_id in re.findall(r'<@&([0-9]+)>', content)
+			)
+
+		def repl(match):
+			return transformations.get(match[0], '')
+
+		pattern = re.compile('|'.join(transformations.keys()))
+		result = pattern.sub(repl, content)
+
+		if escape_markdown:
+			result = discord.utils.escape_mentions(result)
+
+		# Completely ensure no mentions escape:
+		return discord.utils.escape_mentions(result)
 
 class CapsHelpCommand(commands.MinimalHelpCommand):
 	async def send_pages(self):
