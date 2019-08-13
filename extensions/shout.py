@@ -64,10 +64,10 @@ class Shout(commands.Cog):
 		would conflict with that of other bots.
 		"""
 		if await self.db.toggle_guild_state(context.guild.id):
-			new_state = 'opt-out'
+			new_state = 'OPT-OUT'
 		else:
-			new_state = 'opt-in'
-		await context.send(f'Shout auto response is now {new_state} for this server.')
+			new_state = 'OPT-IN'
+		await context.send(f'SHOUT AUTO RESPONSE IS NOW {new_state} FOR THIS SERVER.')
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
