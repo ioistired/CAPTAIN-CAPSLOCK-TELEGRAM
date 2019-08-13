@@ -1,21 +1,29 @@
 import functools
 import itertools
+import re
 from pathlib import Path
 from sys import maxunicode
 
 # if the amount of shadowing builtins that i do bothers you, please fix your syntax highlighter
 
 def is_shout(str):
-	length = len(str)
+	words = (s for s in re.split(r'\b', str) if s.isalnum())
+	stats = [is_shout for is_shout in map(is_shout_word, words) if is_shout is not None]
+	return sum(stats) / len(stats) >= 0.5
+
+def is_shout_word(word):
+	length = len(word)
 	count = 0
 
-	for c in str:
+	for c in word:
 		if c in DEFAULT_IGNORABLE:
 			length -= 1
 		if c in UPPERCASE_LETTERS:
 			count += 1
 
-	return length >= 4 and count / length > 0.5
+	if length < 3:
+		return None
+	return count / length >= 0.9
 
 properties_path = Path(__file__).parent.parent / 'data' / 'DerivedCoreProperties.txt'
 
