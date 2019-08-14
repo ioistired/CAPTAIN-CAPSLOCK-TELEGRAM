@@ -35,9 +35,7 @@ def owner_or_permissions(**perms):
 	async def predicate(ctx):
 		if await ctx.bot.is_owner(ctx.author):
 			return True
-		permissions = ctx.channel.permissions_for(ctx.author)
-		return any(getattr(permissions, perm, None) == value
-				   for perm, value in perms.items())
+		return any(getattr(permissions, perm, None) == value for perm, value in ctx.author.guild_permissions.items())
 	return commands.check(predicate)
 
 class Shout(commands.Cog):
