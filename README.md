@@ -33,8 +33,9 @@ Not many.
 ## What about message deletes/edits?
 
 Deleting a message will delete its correspond entry in the database, if there is one.
-Editing a message will do the same, however, if you sneakily edit a shout so that it's no longer a shout, the bot
-will delete the correspond entry in the database.
+Editing a message will update the entry to match, however,
+if you sneakily edit a shout so that it's no longer a shout,
+the bot will delete the correspond entry in the database instead.
 For example, saying "YOOOOO" and then editing it to "yo" will mean that the cap' will not say "YOOOOO" anymore.
 
 If a channel is deleted, all of its corresponding messages are deleted from the database.
