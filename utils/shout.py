@@ -23,12 +23,14 @@ from sys import maxunicode
 
 def is_shout(str):
 	words = [s for s in re.split(r'\b', str) if s and re.fullmatch(r'\w+', s)]
-	stats = list(map(functools.partial(is_shout_word, len(words)), words))
+	stats = list(map(functools.partial(is_shout_word, num_words=len(words)), words))
 	if not stats:
 		return False  # prevent divide by zero
+	if len(stats) <= 3:
+		return is_shout_word(''.join(words), len(stats))
 	return sum(stats) / len(stats) >= shout_coefficient(len(stats))
 
-def is_shout_word(num_words, word, *, IGNORED_WORDS=frozenset({'I', 'OK'})):
+def is_shout_word(word, num_words, *, IGNORED_WORDS=frozenset({'I', 'OK'})):
 	if word in IGNORED_WORDS:
 		return False
 
