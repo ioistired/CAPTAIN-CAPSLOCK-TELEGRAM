@@ -28,6 +28,8 @@ Not many.
 - If you have the Manage Messages permission *server-wide* then you can use the @CAPTAIN CAPSLOCK toggleserver
   command. This will make the shouting auto response opt-in or opt-out for the entire server. If it is opt-in,
   users will need to run @CAPTAIN CAPSLOCK toggle before the bot will log their shouts and repeat them.
+- If you have permission to delete a message then you can also remove it from the database by using the
+  @CAPTAIN CAPSLOCK remove command.
 
 ## What's in a shout?
 

@@ -19,6 +19,7 @@ import re
 from discord.ext import commands
 
 import utils.shout
+from utils.converter import Message
 
 logger = logging.getLogger(__name__)
 CODEBLOCK_RE = re.compile(r'(`{1,3}).+?\1', re.DOTALL)
@@ -41,7 +42,22 @@ def owner_or_permissions(**perms):
 class Shout(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-		self.db = self.bot.get_cog('Database')
+		self.db = bot.cogs['Database']
+
+	@commands.command(name='remove')
+	async def remove_shout(self, context, message: Message):
+		if not (context.author == message.author or message.channel.permissions_for(context.author).manage_messages):
+			await context.send(
+				"YOU DON'T HAVE PERMISSION TO DELETE THAT SHOUT "
+				"BECAUSE YOU DON'T HAVE PERMISSION TO DELETE THAT MESSAGE")
+			return
+
+		count = await self.db.delete_shout(message.id)
+		if not count:
+			await context.send('THAT MESSAGE IS NOT A SHOUT THAT I KNOW ABOUT')
+			return
+
+		await context.message.add_reaction(self.bot.config['success_or_failure_emojis'][True])
 
 	@commands.command(aliases=['toggle-user'])
 	async def toggle(self, context):

@@ -59,7 +59,8 @@ class Database(commands.Cog):
 		return await self.bot.pool.fetchval('SELECT content FROM shout WHERE message = $1', message_id)
 
 	async def delete_shout(self, message_id):
-		await self.bot.pool.execute('DELETE FROM shout WHERE message = $1', message_id)
+		tag = await self.bot.pool.execute('DELETE FROM shout WHERE message = $1', message_id)
+		return int(tag.split()[-1])
 
 	async def delete_shouts(self, message_ids):
 		await self.bot.pool.executemany('DELETE FROM shout WHERE message = $1', [(id,) for id in message_ids])
