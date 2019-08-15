@@ -26,9 +26,12 @@ def is_shout(str):
 	stats = list(map(is_shout_word, words))
 	if not stats:
 		return False  # prevent divide by zero
-	return sum(stats) / len(stats) >= shout_coefficient(len(stats))
+	return sum(stats) / len(stats) > shout_coefficient(len(stats))
 
 def is_shout_word(word):
+	if len(word) <= 2:
+		return False
+
 	length = len(word)
 	count = 0
 
@@ -41,7 +44,9 @@ def is_shout_word(word):
 	return count / length >= 0.5
 
 def shout_coefficient(words: int):
-	if words <= 2:
+	if words == 1:
+		return 1.0
+	if words == 2:
 		return 0.5
 	return min(words ** -2 + 0.40, 1)
 
