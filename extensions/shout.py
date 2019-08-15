@@ -46,6 +46,13 @@ class Shout(commands.Cog):
 
 	@commands.command(name='remove')
 	async def remove_shout(self, context, message: Message):
+		"""removes a shout from the database without removing the message itself.
+
+		You can specify the message in one of three ways:
+		- message ID
+		- channel_id-message_id (obtained by shift-clicking the "copy ID" button)
+		- a jump link to a message
+		"""
 		if not (context.author == message.author or message.channel.permissions_for(context.author).manage_messages):
 			await context.send(
 				"YOU DON'T HAVE PERMISSION TO DELETE THAT SHOUT "
