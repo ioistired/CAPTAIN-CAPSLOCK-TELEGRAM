@@ -32,11 +32,11 @@ def is_shout(content):
 # Used under the MIT license. Copyright (c) 2017 BeatButton
 # https://github.com/BeatButton/beattie/blob/44fd795aef7b1c19233510cda8046baab5ecabf3/utils/checks.py
 def owner_or_permissions(**perms):
-	"""Checks if the member is a bot owner or has any of the permissions necessary."""
+	"""Checks if the member is a bot owner or has any of the guild permissions necessary."""
 	async def predicate(ctx):
 		if await ctx.bot.is_owner(ctx.author):
 			return True
-		return any(getattr(permissions, perm, None) == value for perm, value in ctx.author.guild_permissions.items())
+		return any(getattr(ctx.author.guild_permissions, perm, None) == value for perm, value in perms.items())
 	return commands.check(predicate)
 
 class Shout(commands.Cog):
