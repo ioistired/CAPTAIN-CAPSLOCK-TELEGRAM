@@ -23,13 +23,13 @@ from sys import maxunicode
 
 def is_shout(str):
 	words = [s for s in re.split(r'\b', str) if s and re.fullmatch(r'\w+', s)]
-	stats = list(map(is_shout_word, words))
+	stats = list(map(functools.partial(is_shout_word, len(words)), words))
 	if not stats:
 		return False  # prevent divide by zero
 	return sum(stats) / len(stats) >= shout_coefficient(len(stats))
 
-def is_shout_word(word):
-	if word == 'I':
+def is_shout_word(num_words, word, *, IGNORED_WORDS=frozenset({'I', 'OK'})):
+	if word in IGNORED_WORDS:
 		return False
 
 	length = len(word)
@@ -41,7 +41,7 @@ def is_shout_word(word):
 		if c in UPPERCASE_LETTERS:
 			count += 1
 
-	return count / length >= 0.5
+	return count / length >= (0.5 if num_words > 3 else 0.75)
 
 def shout_coefficient(words: int):
 	if words == 1:
