@@ -209,7 +209,7 @@ class CapsHelpCommand(commands.MinimalHelpCommand):
 			await destination.send(page.upper())
 
 if __name__ == '__main__':
-	with open('data/config.json') as f:
-		config = json.load(f)
+	with open('data/config.py') as f:
+		config = eval(f.read(), dict(null=None, false=False, true=True))
 
 	CaptainCapslock(config).run()
