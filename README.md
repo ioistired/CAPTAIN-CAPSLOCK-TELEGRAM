@@ -8,28 +8,6 @@ Say something. Say anything. But say it LOUDLY. The cap' will log what you say (
 shout something random back at you. The more you shout at it, the bigger its repertoire gets.
 Duplicate text will not be logged.
 
-## What's in a shout?
-
-*Would a scream by any other name still be as loud?*
-
-The algorithm for determining shouts is in [utils/shout.py](https://github.com/bmintz/CAPTAIN-CAPSLOCK/blob/master/utils/shout.py).
-It is roughly as follows:
-
-- A sentence is a shout if at least 50% of the words are shouting words (excluding words <3 characters in length)
-- A word is a shouting word if >50% of its characters are uppercase.
-
-For example, "you went to college to be a WELL EDUCATED CITIZEN OF THE WORLD, nick" is a shout because more than
-half of the words >2 characters long are shouting words ("WELL", "EDUCATED", "CITIZEN", "THE", and "WORLD").
-
-## What commands does it have?
-
-Not many.
-
-- @CAPTAIN CAPSLOCK toggle will enable or disable the shout response and logging for you.
-- If you have the Manage Messages permission *server-wide* then you can use the @CAPTAIN CAPSLOCK toggleserver
-  command. This will make the shouting auto response opt-in or opt-out for the entire server. If it is opt-in,
-  users will need to run @CAPTAIN CAPSLOCK toggle before the bot will log their shouts and repeat them.
-
 ## What about message deletes/edits?
 
 Deleting a message will delete its correspond entry in the database, if there is one.
@@ -41,6 +19,44 @@ For example, saying "YOOOOO" and then editing it to "yo" will mean that the cap'
 If a channel is deleted, all of its corresponding messages are deleted from the database.
 
 When Captain Caps is kicked from a server, all shouts for that server are deleted from its database.
+
+## What commands does it have?
+
+Not many.
+
+- @CAPTAIN CAPSLOCK toggle will enable or disable the shout response and logging for you.
+- If you have the Manage Messages permission *server-wide* then you can use the @CAPTAIN CAPSLOCK toggleserver
+  command. This will make the shouting auto response opt-in or opt-out for the entire server. If it is opt-in,
+  users will need to run @CAPTAIN CAPSLOCK toggle before the bot will log their shouts and repeat them.
+
+## What's in a shout?
+
+*Would a scream by any other name still be as loud?*
+
+The algorithm for determining shouts is in [utils/shout.py](https://github.com/bmintz/CAPTAIN-CAPSLOCK/blob/master/utils/shout.py).
+It is roughly as follows:
+
+- The number of words required to be shouting words is determined by the number of words in the sentence.
+  If there are only 1 or 2 words in the sentence, half of the words must be shouting words.
+  Otherwise, a percentage is calculated per this formula: \
+  `min(words ^ -2 + 0.40, 1) * 100` \
+  At least this percentage of the words in the sentence must be shouting words.
+- A word is a shouting word if ≥50% of its characters are uppercase.
+
+For example, let's take "you went to college to be a WELL EDUCATED CITIZEN OF THE WORLD, nick". \
+Here are the words:
+
+```
+['you', 'went', 'to', 'college', 'to', 'be', 'a', 'WELL', 'EDUCATED', 'CITIZEN', 'OF', 'THE', 'WORLD', 'nick']
+```
+
+That's 14 words. The formula says that about 40.5% of the words must be shouting words. Here they are:
+
+```
+['WELL', 'EDUCATED', 'CITIZEN', 'OF', 'THE', 'WORLD']
+```
+
+That's 6 words. 6/14 ≈ 42.9%, which is ≥40.5%, so this is a shout.
 
 ## How do I run this?
 

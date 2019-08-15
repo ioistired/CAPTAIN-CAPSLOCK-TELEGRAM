@@ -19,12 +19,14 @@ import re
 from pathlib import Path
 from sys import maxunicode
 
-# if the amount of shadowing builtins that i do bothers you, please fix your syntax highlighter
+# if the amount of shadowing builtins that i do bothers you, please fix your syntax highlighter / linter
 
 def is_shout(str):
-	words = (s for s in re.split(r'\b', str) if s.isalnum())
-	stats = [is_shout for is_shout in map(is_shout_word, words) if is_shout is not None]
-	return sum(stats) / len(stats) >= 0.5
+	words = [s for s in re.split(r'\b', str) if s and re.fullmatch(r'\w+', s)]
+	stats = list(map(is_shout_word, words))
+	if not stats:
+		return False  # prevent divide by zero
+	return sum(stats) / len(stats) >= shout_coefficient(len(stats))
 
 def is_shout_word(word):
 	length = len(word)
@@ -36,9 +38,12 @@ def is_shout_word(word):
 		if c in UPPERCASE_LETTERS:
 			count += 1
 
-	if length < 3:
-		return None
-	return count / length > 0.5
+	return count / length >= 0.5
+
+def shout_coefficient(words: int):
+	if words <= 2:
+		return 0.5
+	return min(words ** -2 + 0.40, 1)
 
 properties_path = Path(__file__).parent.parent / 'data' / 'DerivedCoreProperties.txt'
 
