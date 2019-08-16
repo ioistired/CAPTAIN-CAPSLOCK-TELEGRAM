@@ -22,10 +22,10 @@ from sys import maxunicode
 # if the amount of shadowing builtins that i do bothers you, please fix your syntax highlighter / linter
 
 def is_shout(str):
+	if len(str) <= 1:
+		return False
 	words = [s for s in re.split(r'\b', str) if s and re.fullmatch(r'\w+', s)]
 	stats = list(map(functools.partial(is_shout_word, num_words=len(words)), words))
-	if not stats:
-		return False  # prevent divide by zero
 	if len(stats) <= 3:
 		return is_shout_word(''.join(words), len(stats))
 	return sum(stats) / len(stats) >= shout_coefficient(len(stats))
