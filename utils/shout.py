@@ -68,8 +68,9 @@ def get_derived_core_property(property):
 	desired = property
 
 	with open(properties_path) as f:
-		for property, range in filter(desired.__eq__, parse_properties(f)):
-			chars.update(range)
+		for property, range in parse_properties(f):
+			if property == desired:
+				chars.update(range)
 
 	return frozenset(chars)
 
