@@ -93,11 +93,6 @@ def unicode_range_to_range(range_str):
 hex_to_int = functools.partial(int, base=16)
 
 def inclusive_range(start, stop=None, step=1):
-	if stop is None:
-		stop = start + 1
-	else:
-		stop += 1
-
 	return range(start, start + 1 if stop is None else stop + 1, step)
 
 UPPERCASE_LETTERS = frozenset(filter(str.isupper, map(chr, range(maxunicode + 1))))
