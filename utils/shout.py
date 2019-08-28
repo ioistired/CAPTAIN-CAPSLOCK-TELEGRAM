@@ -31,7 +31,7 @@ def is_shout(str):
 	return sum(stats) / len(stats) >= shout_coefficient(len(stats))
 
 def is_shout_word(word, num_words, *, IGNORED_WORDS=frozenset({'I', 'OK'})):
-	if word in IGNORED_WORDS:
+	if word in IGNORED_WORDS or not word:
 		return False
 
 	length = len(word)
@@ -43,7 +43,7 @@ def is_shout_word(word, num_words, *, IGNORED_WORDS=frozenset({'I', 'OK'})):
 		if c in UPPERCASE_LETTERS:
 			count += 1
 
-	return count / length >= (0.5 if num_words > 3 else 0.75)
+	return length and count / length >= (0.5 if num_words > 3 else 0.75)
 
 def shout_coefficient(words: int):
 	if words == 1:
