@@ -24,7 +24,7 @@ from sys import maxunicode
 def is_shout(str):
 	if len(str) <= 1:
 		return False
-	words = [s for s in re.split(r'\b', str) if s and re.fullmatch(r'\w+', s)]
+	words = [s for s in re.split(r'\b', str) if s and s.upper().isupper()]
 	stats = list(map(functools.partial(is_shout_word, num_words=len(words)), words))
 	if len(stats) <= 3:
 		return is_shout_word(''.join(words), len(stats))
