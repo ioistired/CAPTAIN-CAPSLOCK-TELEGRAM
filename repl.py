@@ -4,8 +4,8 @@ from utils.shout import is_shout
 
 while True:
 	try:
-		sentence = input('> ')
+		sentence = input('📣 ')
 	except (KeyboardInterrupt, EOFError):
 		break
 
-	print(is_shout(sentence))
+	print(is_shout(eval(sentence)))
