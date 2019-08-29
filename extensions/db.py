@@ -68,27 +68,36 @@ class Database(commands.Cog):
 	async def delete_by_guild_or_user(self, guild_or_user):
 		await self.bot.pool.execute('DELETE FROM shout WHERE guild_or_user = $1', guild_or_user)
 
-	async def _toggle_state(self, table_name, id, default):
-		"""toggle the state for a user or guild. If there's no entry already, new state = default."""
+	async def _toggle_state(self, table_name, id, default_new_state):
+		"""toggle the state for a user or guild. If there's no entry already, new state = default_new_state."""
 		# see _get_state for why string formatting is OK here
 		await self.bot.pool.execute(f"""
 			INSERT INTO {table_name} (id, state) VALUES ($1, $2)
 			ON CONFLICT (id) DO UPDATE SET state = NOT {table_name}.state
-		""", id, default)
+		""", id, default_new_state)
+
+	async def set_guild_state(self, guild_id, new_state):
+		"""Sets the state for a guild."""
+		await self.bot.pool.execute(f"""
+			INSERT INTO guild_opt (id, state)
+			VALUES ($1, $2)
+			ON CONFLICT (id) DO UPDATE
+			SET state = EXCLUDED.state
+		""", guild_id, new_state)
 
 	async def toggle_user_state(self, user_id, guild_id=None) -> bool:
 		"""Toggle whether the user has opted in to the bot.
 		If the user does not have an entry already:
 			If the guild_id is provided and not None, the user's state is set to the opposite of the guilds'
-			Otherwise, the user's state is set to False (opted out), since the default state is True.
+			Otherwise, the user's state is set to True (opted in), since the default state is False.
 		Returns the new state.
 		"""
-		default = False
+		default_new_state = True
 		guild_state = await self.get_guild_state(guild_id)
 		if guild_state is not None:
 			# if the auto response is enabled for the guild then toggling the user state should opt out
-			default = not guild_state
-		await self._toggle_state('user_opt', user_id, default)
+			default_new_state = not guild_state
+		await self._toggle_state('user_opt', user_id, default_new_state)
 		return await self.get_user_state(user_id)
 
 	async def toggle_guild_state(self, guild_id):
@@ -97,7 +106,7 @@ class Database(commands.Cog):
 		except for users that have opted in to it using `toggle_user_state`.
 		Otherwise, the response will be on for all users except those that have opted out.
 		"""
-		await self._toggle_state('guild_opt', guild_id, False)
+		await self._toggle_state('guild_opt', guild_id, True)
 		return await self.get_guild_state(guild_id)
 
 	async def _get_state(self, table_name, id):
@@ -115,17 +124,13 @@ class Database(commands.Cog):
 		return await self._get_state('guild_opt', guild_id)
 
 	async def get_state(self, guild_id, user_id):
-		state = True
-
-		guild_state = await self.get_guild_state(guild_id)
-		if guild_state is not None:
-			state = guild_state
-
-		user_state = await self.get_user_state(user_id)
+		user_state = await self.get_user_state(guild_id)
 		if user_state is not None:
-			state = user_state  # user state overrides guild state
+			return user_state
 
-		return state
+		if guild_id is None:
+			return True
+		return await self.get_guild_state(guild_id)
 
 def get_guild_or_user(message):
 	try:

@@ -102,6 +102,16 @@ class Shout(commands.Cog):
 			new_state = 'OPT-IN'
 		await context.send(f'SHOUT AUTO RESPONSE IS NOW {new_state} FOR THIS SERVER.')
 
+	@commands.command(name='enable')
+	@owner_or_permissions(manage_messages=True)
+	@commands.guild_only()
+	async def enable(self, context):
+		"""Sets the shouting auto response to opt-out for this server. See the __toggleserver__ command
+		for more information.
+		"""
+		await self.db.set_guild_state(context.guild.id, True)
+		await context.send('SHOUT AUTO RESPONSE IS NOW OPT-OUT FOR THIS SERVER.')
+
 	@commands.Cog.listener()
 	async def on_message(self, message):
 		if not is_shout(message.content) or not self.bot.should_reply(message):

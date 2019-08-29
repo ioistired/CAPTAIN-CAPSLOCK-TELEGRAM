@@ -97,7 +97,16 @@ class CaptainCapslock(commands.AutoShardedBot):
 			await context.send(str(error).upper())
 		elif isinstance(error, commands.NotOwner):
 			logger.error('%s tried to run %s but is not the owner', context.author, context.command.name)
-		elif isinstance(error, commands.CommandInvokeError):
+		elif (
+			isinstance(error, commands.CommandInvokeError)
+			and
+				getattr(
+					type(context.cog),
+					'cog_command_error',
+					# treat ones with no cog (e.g. eval'd ones) as being in a cog that did not override
+					commands.Cog.cog_command_error)
+				is commands.Cog.cog_command_error
+		):
 			await context.send('AN INTERNAL ERROR OCCURED WHILE TRYING TO RUN THAT COMMAND.')
 			logger.error('In %s:', context.command.qualified_name)
 			logger.error(''.join(traceback.format_tb(error.original.__traceback__)))
