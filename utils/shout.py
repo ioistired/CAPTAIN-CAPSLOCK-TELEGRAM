@@ -41,7 +41,7 @@ def is_shout(str):
 	count = 0
 
 	for c in str:
-		if c.isspace() or c in DEFAULT_IGNORABLE:  # is it not a word character, ie can it not be uppercased
+		if c.isspace() or c in DEFAULT_IGNORABLE:
 			length -= 1
 		if c.isupper():
 			count += 1

@@ -38,9 +38,8 @@ Not many.
 *Would a scream by any other name still be as loud?*
 
 The algorithm for determining shouts is in [utils/shout.py](https://github.com/bmintz/CAPTAIN-CAPSLOCK/blob/master/utils/shout.py).
-All word characters (read: characters that can be uppercased) are considered, and if more than half of them
-*actually are* uppercase, the sentence is a shout. Certain strings are ignored (mostly emoticons). See the utils/shout.py
-file for more details.
+All word characters are considered, and if more than half of them are uppercase, the sentence is a shout.
+Certain strings are ignored (mostly emoticons). See the utils/shout.py file for more details.
 
 ## How do I run this?
 
