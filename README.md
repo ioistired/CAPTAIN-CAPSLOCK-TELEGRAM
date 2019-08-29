@@ -1,5 +1,7 @@
 # CAPTAIN CAPSLOCK
 
+[![Unit Test Status](https://img.shields.io/travis/bmintz/CAPTAIN-CAPSLOCK/master.svg?label=tests)](https://travis-ci.org/bmintz/CAPTAIN-CAPSLOCK)
+
 A Discord bot that shouts at you when you shout at it.
 
 ## How does it operate?
