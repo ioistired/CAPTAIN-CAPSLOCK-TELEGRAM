@@ -1,8 +1,0 @@
-'tfw MANUALLY_INITIATED_CRASH'
-''.join(unicodedata.lookup('NEGATIVE SQUARED LATIN CAPITAL LETTER ' + c) for c in 'LONEBOY')
-'I SHALL'
-'PR IT'
-'F U'
-'FU'
-'you went to college to be a WELL EDUCATED CITIZEN OF THE WORLD, nick'
-'🅱️🅱️🅱️'
