@@ -36,29 +36,8 @@ Not many.
 *Would a scream by any other name still be as loud?*
 
 The algorithm for determining shouts is in [utils/shout.py](https://github.com/bmintz/CAPTAIN-CAPSLOCK/blob/master/utils/shout.py).
-It is roughly as follows:
-
-- The number of words required to be shouting words is determined by the number of words in the sentence.
-  If there are only 1 or 2 words in the sentence, half of the words must be shouting words.
-  Otherwise, a percentage is calculated per this formula: \
-  `min(words ^ -2 + 0.40, 1) * 100` \
-  At least this percentage of the words in the sentence must be shouting words.
-- A word is a shouting word if ≥50% of its characters are uppercase.
-
-For example, let's take "you went to college to be a WELL EDUCATED CITIZEN OF THE WORLD, nick". \
-Here are the words:
-
-```
-['you', 'went', 'to', 'college', 'to', 'be', 'a', 'WELL', 'EDUCATED', 'CITIZEN', 'OF', 'THE', 'WORLD', 'nick']
-```
-
-That's 14 words. The formula says that about 40.5% of the words must be shouting words. Here they are:
-
-```
-['WELL', 'EDUCATED', 'CITIZEN', 'OF', 'THE', 'WORLD']
-```
-
-That's 6 words. 6/14 ≈ 42.9%, which is ≥40.5%, so this is a shout.
+All word characters (read: characters that can be uppercased) are considered, and if more than half of them
+*actually are* uppercase, the sentence is a shout.
 
 ## How do I run this?
 
