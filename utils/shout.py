@@ -15,7 +15,7 @@
 
 def is_shout(str):
 	length = len(str)
-	if length <= 1:
+	if length <= 1 or str == 'OK':
 		return False
 	count = 0
 
