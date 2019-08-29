@@ -8,6 +8,7 @@ while True:
 	try:
 		sentence = input('📣 ')
 	except (KeyboardInterrupt, EOFError):
+		print()
 		break
 
 	if not sys.stdin.isatty():
