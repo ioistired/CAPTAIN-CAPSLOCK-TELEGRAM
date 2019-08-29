@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import unicodedata
-from pathlib import Path
 
 from utils.shout import is_shout
 
