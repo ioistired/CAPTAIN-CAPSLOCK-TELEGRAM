@@ -15,74 +15,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with CAPTAIN CAPSLOCK.  If not, see <https://www.gnu.org/licenses/>.
 
-import contextlib
 import logging
-import json
 import re
-import traceback
 
 import asyncpg
 import discord
+from bot_bin.bot import Bot
 from discord.ext import commands
 
-logging.basicConfig(level=logging.WARN)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('discord').setLevel(logging.WARNING)
 logger = logging.getLogger('bot')
-logger.setLevel(logging.INFO)
 
-class CaptainCapslock(commands.AutoShardedBot):
-	activity = discord.Activity(type=discord.ActivityType.watching, name='YOU SCREAM')
-
-	def __init__(self, config, *args, **kwargs):
-		self.config = config
-		self.process_config()
-
+class CaptainCapslock(Bot):
+	def __init__(self, config, **kwargs):
 		super().__init__(
-			*args,
-			activity=self.activity,
-			command_prefix=commands.when_mentioned,
+			config=config,
+			setup_db=True,
 			help_command=CapsHelpCommand(),
-			case_insensitive=True)
+			case_insensitive=True,
+			**kwargs)
 
-	def process_config(self):
-		self.config.setdefault('success_or_failure_emojis', ('❌', '✅'))
-
-		ignore_bots_conf = self.config.setdefault('ignore_bots', {})
-		ignore_bots_conf.setdefault('default', True)
-		overrides_conf = ignore_bots_conf.setdefault('overrides', {})
-		overrides_conf.setdefault('guilds', ())
-		overrides_conf.setdefault('channels', ())
-		overrides_conf['guilds'] = set(overrides_conf['guilds'])
-		overrides_conf['channels'] = set(overrides_conf['channels'])
-
-	async def on_ready(self):
-		await self.change_presence(activity=self.activity)
-		logger.info('Ready')
-
-	async def on_message(self, message):
-		if self.should_reply(message):
-			await self.process_commands(message)
-
-	def should_reply(self, message):
-		"""return whether the bot should reply to a given message"""
-		return not (
-			message.author == self.user
-			or (message.author.bot and not self._should_reply_to_bot(message))
-			or not message.content)
-
-	def _should_reply_to_bot(self, message):
-		if message.author == self.user:
-			return False
-
-		should_reply = not self.config['ignore_bots']['default']
-		overrides = self.config['ignore_bots']['overrides']
-
-		def check_override(location, overrides_key):
-			return location and location.id in overrides[overrides_key]
-
-		if check_override(message.guild, 'guilds') or check_override(message.channel, 'channels'):
-			should_reply = not should_reply
-
-		return should_reply
+	def initial_activity(self):
+		return discord.Activity(type=discord.ActivityType.watching, name='YOU SCREAM')
 
 	async def on_command_error(self, context, error):
 		if isinstance(error, commands.NoPrivateMessage):
@@ -113,39 +68,15 @@ class CaptainCapslock(commands.AutoShardedBot):
 			# pylint: disable=logging-format-interpolation
 			logger.error('{0.__class__.__name__}: {0}'.format(error.original))
 
-	async def login(self, token=None, **kwargs):
-		await self._init_db()
-		self._load_extensions()
-		token = self.config['tokens'].pop('discord')
-		await super().login(token, **kwargs)
-
-	async def _init_db(self):
-		credentials = self.config.pop('database')
-
-		try:
-			self.pool = await asyncpg.create_pool(credentials['url'])
-		except KeyError:
-			self.pool = await asyncpg.create_pool(**credentials)
-
-	def _load_extensions(self):
-		for extension in [
-			'extensions.db',
-			'extensions.shout',
-			'extensions.meta',
-			'ben_cogs.misc',
-			'ben_cogs.stats',
-			'ben_cogs.sql',
-			'jishaku'
-		]:
-			self.load_extension(extension)
-			logger.info('loaded extension %s successfully', extension)
-
-	async def close(self):
-		try:
-			await super().close()
-		finally:
-			with contextlib.suppress(AttributeError):
-				await self.pool.close()
+	startup_extensions = (
+		'extensions.db',
+		'extensions.shout',
+		'extensions.meta',
+		'bot_bin.misc',
+		'bot_bin.stats',
+		'bot_bin.sql',
+		'jishaku',
+	)
 
 	# Using code provided by Rapptz under the MIT License
 	# Copyright © 2015–2019 Rapptz
@@ -217,8 +148,9 @@ class CapsHelpCommand(commands.MinimalHelpCommand):
 		for page in self.paginator.pages:
 			await destination.send(page.upper())
 
-if __name__ == '__main__':
-	with open('data/config.py') as f:
-		config = eval(f.read(), dict(null=None, false=False, true=True))
+def load_json_compat(filename):
+	with open(filename) as f:
+		return eval(f.read(), dict(null=None, false=False, true=True))
 
-	CaptainCapslock(config).run()
+if __name__ == '__main__':
+	CaptainCapslock(load_json_compat('data/config.py')).run()
