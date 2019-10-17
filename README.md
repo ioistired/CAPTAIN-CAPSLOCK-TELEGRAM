@@ -45,6 +45,7 @@ You'll need PostgreSQL 11+ and python3.6+.
 
 ```
 $ createdb captain_capslock
+$ sudo -u postgres psql captain_capslock -c 'CREATE EXTENSION tsm_system_rows'
 $ psql captain_capslock -f schema.sql
 $ cp data/config.example.json data/config.json
 $ # edit config.json as needed

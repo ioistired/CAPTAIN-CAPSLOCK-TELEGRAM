@@ -1,4 +1,2 @@
 asyncpg
-bot_bin[sql]>=1.0.0,<2.0.0
-discord.py>=1.0.1, <2.0.0
-jishaku
+telethon
