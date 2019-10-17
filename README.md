@@ -1,9 +1,6 @@
 # CAPTAIN CAPSLOCK
 
-[![Unit Test Status](https://img.shields.io/travis/iomintz/CAPTAIN-CAPSLOCK/master.svg?label=tests)](https://travis-ci.org/iomintz/CAPTAIN-CAPSLOCK)
-[![Discord Bots](https://discordbots.org/api/widget/status/469736963277062166.svg?noavatar=true)](https://discordbots.org/bot/469736963277062166)
-
-A Discord bot that shouts at you when you shout at it.
+A Telegram bot that shouts at you when you shout at it.
 
 ## How does it operate?
 
@@ -27,12 +24,12 @@ When Captain Caps is kicked from a server, all shouts for that server are delete
 
 Not many.
 
-- @CAPTAIN CAPSLOCK toggle will enable or disable the shout response and logging for you.
-- If you have the Manage Messages permission *server-wide* then you can use the @CAPTAIN CAPSLOCK toggleserver
-  command. This will make the shouting auto response opt-in or opt-out for the entire server. If it is opt-in,
-  users will need to run @CAPTAIN CAPSLOCK toggle before the bot will log their shouts and repeat them.
+- /toggle will enable or disable the shout response and logging for you.
+- If you have the Admin permission then you can use the /togglegroup
+  command. This will make the shouting auto response opt-in or opt-out for the entire group chat. If it is opt-in,
+  users will need to run /toggle before the bot will log their shouts and repeat them.
 - If you have permission to delete a message then you can also remove it from the database by using the
-  @CAPTAIN CAPSLOCK remove command.
+  /remove command.
 
 ## What's in a shout?
 
