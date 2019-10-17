@@ -31,7 +31,7 @@ logger = logging.getLogger('bot')
 with open('config.py') as f:
 	config = eval(f.read(), {})
 
-bot = TelegramClient('test', config['api_id'], config['api_hash'])
+bot = TelegramClient(config['session_name'], config['api_id'], config['api_hash'])
 
 def is_command(message):
 	return (message.entities and any(
