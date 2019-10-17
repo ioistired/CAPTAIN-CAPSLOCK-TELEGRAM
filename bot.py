@@ -33,6 +33,10 @@ with open('config.py') as f:
 
 bot = TelegramClient('test', config['api_id'], config['api_hash'])
 
+def is_command(message):
+	return (message.entities and any(
+		isinstance(entity, tl.types.MessageEntityBotCommand) and entity.offset == 0 for entity in message.entities))
+
 @bot.on(events.NewMessage)
 async def on_message(event):
 	message = event.message
@@ -40,8 +44,7 @@ async def on_message(event):
 		# don't respond in DMs
 		return
 
-	if any(isinstance(entity, tl.types.MessageEntityBotCommand) and entity.offset == 0 for entity in message.entities):
-		# don't respond to commands
+	if is_command(message):
 		return
 
 	chat_id, user_id = message.to_id.chat_id, message.from_id
