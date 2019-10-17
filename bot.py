@@ -48,12 +48,12 @@ async def on_message(event):
 		return
 
 	chat_id, user_id = message.to_id.chat_id, message.from_id
-	if not utils.shout.is_shout(message.message):
+	if not utils.shout.is_shout(message.raw_text):  # ignore formatting
 		return
 
 	shout = await bot.db.random_shout(chat_id)
 	if shout: await event.respond(shout)
-	await bot.db.save_shout(chat_id, message.id, message.message)
+	await bot.db.save_shout(chat_id, message.id, message.text)  # but replay formatting next time it's said
 
 async def main():
 	bot.pool = await asyncpg.create_pool(**config['database'])
