@@ -27,13 +27,13 @@ class Database:
 		with open('queries.sql') as f:
 			self.queries = jinja2.Template(f.read(), line_statement_prefix='-- :').module
 
-	async def update_shout(self, message_id, content):
+	async def update_shout(self, chat_id, message_id, content):
 		async with self.pool.acquire() as conn, conn.transaction():
 			try:
-				await conn.execute(self.queries.update_shout(), message_id, content)
+				await conn.execute(self.queries.update_shout(), chat_id, message_id, content)
 			except asyncpg.UniqueViolationError:
 				# don't store duplicate shouts
-				await self.delete_shout(message_id, connection=conn)
+				await self.delete_shout(chat_id, message_id, connection=conn)
 
 	async def save_shout(self, chat_id, message_id, content):
 		tag = await self.pool.execute(self.queries.save_shout(), chat_id, message_id, content)
@@ -42,8 +42,8 @@ class Database:
 	async def random_shout(self, chat_id):
 		return await self.pool.fetchval(self.queries.random_shout(), chat_id)
 
-	async def delete_shout(self, message_id, *, connection=None):
-		tag = await (connection or self.pool).execute(self.queries.delete_shout(), message_id)
+	async def delete_shout(self, chat_id, message_id, *, connection=None):
+		tag = await (connection or self.pool).execute(self.queries.delete_shout(), chat_id, message_id)
 		return int(tag.split()[-1])
 
 	async def delete_by_chat(self, chat_id):
@@ -75,4 +75,4 @@ class Database:
 		return await self.toggle_state(types.PeerUser, user_id, default_new_state)
 
 	async def state(self, chat_id, user_id):
-		return await self.bot.pool.fetchval(self.queries.get_state(), chat_id, user_id)
+		return await self.pool.fetchval(self.queries.state(), chat_id, user_id)
