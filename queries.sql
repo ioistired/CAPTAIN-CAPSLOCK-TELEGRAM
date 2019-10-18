@@ -1,14 +1,14 @@
 -- :macro update_shout()
--- params: message_id, content
+-- params: chat_id, message_id, content
 UPDATE shout
-SET content = $2
-WHERE message_id = $1
+SET content = $3
+WHERE (chat_id, message_id) = ($1, $2)
 -- :endmacro
 
 -- :macro delete_shout()
--- params: message_id
+-- params: chat_id, message_id
 DELETE FROM shout
-WHERE message_id = $1
+WHERE (chat_id, message_id) = ($1, $2)
 -- :endmacro
 
 -- :macro save_shout()

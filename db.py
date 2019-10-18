@@ -53,7 +53,7 @@ class Database:
 	async def state_for(self, peer_type: PeerType, id):
 		return await self.pool.fetchval(self.queries.state_for(), peer_type.__name__, id)
 
-	async def toggle_state(self, peer_type: PeerType, id, default_new_state):
+	async def toggle_state(self, peer_type: PeerType, id, *, default_new_state=False):
 		"""toggle the state for a user or guild. If there's no entry already, new state = default_new_state."""
 		return await self.pool.fetchval(self.queries.toggle_state(), peer_type.__name__, id, default_new_state)
 
@@ -67,12 +67,12 @@ class Database:
 			Otherwise, the user's state is set to True (opted in), since the default state is False.
 		Returns the new state.
 		"""
-		default_new_state = True
+		default_new_state = False
 		chat_state = await self.state_for(types.PeerChat, chat_id) if chat_id is not None else default_new_state
 		if chat_state is not None:
 			# if the auto response is enabled for the chat then toggling the user state should opt out
 			default_new_state = not chat_state
-		return await self.toggle_state(types.PeerUser, user_id, default_new_state)
+		return await self.toggle_state(types.PeerUser, user_id, default_new_state=default_new_state)
 
 	async def state(self, chat_id, user_id):
 		return await self.pool.fetchval(self.queries.state(), chat_id, user_id)
