@@ -53,6 +53,8 @@ $ source .venv/bin/activate
 $ ./bot.py
 ```
 
+You'll also want to submit the contents of [command_list.txt](/command_list.txt) to The BotFather.
+
 ## License
 
 Copyright © 2018–2019 Io Mintz
