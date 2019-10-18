@@ -17,7 +17,7 @@
 
 import asyncio
 import logging
-import re
+from functools import wraps
 
 import asyncpg
 from telethon import TelegramClient, events, tl
@@ -28,38 +28,79 @@ from db import Database
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('bot')
 
-with open('config.py') as f:
-	config = eval(f.read(), {})
+def is_command(event):
+	# this is insanely complicated kill me now
+	message = event.message
+	username = getattr(event.client.user, 'username', None)
+	if not username:
+		logger.warning('I have no username!')
+		return False
+	dm = isinstance(message.to_id, tl.types.PeerUser)
+	for entity, text in message.get_entities_text(tl.types.MessageEntityBotCommand):
+		if entity.offset != 0:
+			continue
+		if dm or text.endswith('@' + username):
+			return True
+	return False
 
-bot = TelegramClient(config['session_name'], config['api_id'], config['api_hash'])
+def command_required(f):
+	@wraps(f)
+	async def handler(event):
+		if not is_command(event):
+			return
+		return await f(event)
+	return handler
 
-def is_command(message):
-	return (message.entities and any(
-		isinstance(entity, tl.types.MessageEntityBotCommand) and entity.offset == 0 for entity in message.entities))
-
-@bot.on(events.NewMessage)
+@events.register(events.NewMessage)
 async def on_message(event):
 	message = event.message
 	if isinstance(message.to_id, tl.types.PeerUser):
 		# don't respond in DMs
 		return
-
-	if is_command(message):
+	if is_command(event):
 		return
 
 	chat_id, user_id = message.to_id.chat_id, message.from_id
 	if not utils.shout.is_shout(message.raw_text):  # ignore formatting
 		return
 
-	shout = await bot.db.random_shout(chat_id)
+	shout = await event.client.db.random_shout(chat_id)
 	if shout: await event.respond(shout)
-	await bot.db.save_shout(chat_id, message.id, message.text)  # but replay formatting next time it's said
+	await event.client.db.save_shout(chat_id, message.id, message.text)  # but replay formatting next time it's said
+
+	raise events.StopPropagation  # not a command, so don't let the command handlers get to it
+
+@events.register(events.NewMessage(pattern=r'^/ping'))
+@command_required
+async def ping_command(event):
+	await event.respond('PONG')
+
+@events.register(events.NewMessage(pattern=r'^/license'))
+@command_required
+async def license_command(event):
+	with open('short-license.txt') as f:
+		await event.respond(f.read())
 
 async def main():
-	bot.pool = await asyncpg.create_pool(**config['database'])
-	bot.db = Database(bot.pool)
-	await bot.start(bot_token=config['api_token'])
-	await bot._run_until_disconnected()
+	with open('config.py') as f:
+		config = eval(f.read(), {})
+
+	client = TelegramClient(config['session_name'], config['api_id'], config['api_hash'])
+	client.config = config
+	client.pool = await asyncpg.create_pool(**config['database'])
+	client.db = Database(client.pool)
+
+	for obj in globals().values():
+		if events.is_handler(obj):
+			client.add_event_handler(obj)
+
+	await client.start(bot_token=config['api_token'])
+	client.user = await client.get_me()
+
+	try:
+		await client._run_until_disconnected()
+	finally:
+		client.disconnect()
 
 if __name__ == '__main__':
 	asyncio.get_event_loop().run_until_complete(main())
