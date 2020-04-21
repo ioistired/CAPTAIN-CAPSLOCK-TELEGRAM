@@ -18,6 +18,9 @@ from typing import Type, Union
 import asyncpg
 import jinja2
 from telethon.tl import types
+from telethon.extensions import BinaryReader
+
+import utils
 
 PeerType = Union[Type[types.PeerUser], Type[types.PeerChannel], Type[types.PeerChat]]
 
@@ -35,12 +38,31 @@ class Database:
 				# don't store duplicate shouts
 				await self.delete_shout(chat_id, message_id, connection=conn)
 
-	async def save_shout(self, chat_id, message_id, content):
-		tag = await self.pool.execute(self.queries.save_shout(), chat_id, message_id, content)
+	async def save_shout(self, message):
+		# sanitize message content
+		content = message.message.replace('@', '@\N{invisible separator}')
+		ixs = []
+		entities = message.entities or []
+		for i, entity in enumerate(entities):
+			if isinstance(entity, (types.MessageEntityMention, types.MessageEntityMentionName)):
+				ixs.append(i)
+		for i in reversed(ixs):
+			del entities[i]
+
+		tag = await self.pool.execute(
+			self.queries.save_shout(),
+			utils.peer_id(message.to_id), message.id, content, list(map(bytes, entities)),
+		)
 		return tag == 'INSERT 0 1'
 
-	async def random_shout(self, chat_id):
-		return await self.pool.fetchval(self.queries.random_shout(), chat_id)
+	async def random_shout(self, peer):
+		chat_id = utils.peer_id(peer)
+		row = await self.pool.fetchrow(self.queries.random_shout(), chat_id)
+		if row is None:
+			return None
+		message_id, content, encoded_entities = row
+		entities = [BinaryReader(encoded).tgread_object() for encoded in encoded_entities]
+		return types.Message(id=message_id, to_id=chat_id, message=content, entities=entities)
 
 	async def delete_shout(self, chat_id, message_id, *, connection=None):
 		tag = await (connection or self.pool).execute(self.queries.delete_shout(), chat_id, message_id)

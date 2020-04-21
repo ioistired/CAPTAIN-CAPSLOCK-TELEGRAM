@@ -47,12 +47,6 @@ def is_command(event):
 			return True
 	return False
 
-def get_peer_id(peer):
-	for attr in 'chat_id', 'channel_id', 'user_id':
-		with contextlib.suppress(AttributeError):
-			return getattr(peer, attr)
-	raise TypeError('probably not a peer idk')
-
 def check(predicate):
 	predicate = utils.ensure_corofunc(predicate)
 	def deco(wrapped_handler):
@@ -98,13 +92,13 @@ async def on_message(event):
 		await event.respond('KEEP YOUR VOICE DOWN')
 		raise events.StopPropagation
 
-	peer_id, user_id = get_peer_id(message.to_id), message.from_id
+	peer_id, user_id = utils.peer_id(message.to_id), message.from_id
 	if not await event.client.db.state(type(message.to_id), peer_id, user_id):
 		return
 
-	shout = await event.client.db.random_shout(peer_id)
+	shout = await event.client.db.random_shout(message.to_id)
 	if shout: await event.respond(shout)
-	await event.client.db.save_shout(peer_id, message.id, message.text)  # but replay formatting next time it's said
+	await event.client.db.save_shout(message)
 
 	raise events.StopPropagation
 
@@ -124,7 +118,7 @@ async def license_command(event):
 @command_required
 async def togglegroup_command(event):
 	message = event.message
-	new_state = await event.client.db.toggle_state(type(message.to_id), get_peer_id(message.to_id))
+	new_state = await event.client.db.toggle_state(type(message.to_id), utils.peer_id(message.to_id))
 	if new_state:
 		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-OUT** FOR THIS CHAT')
 	else:

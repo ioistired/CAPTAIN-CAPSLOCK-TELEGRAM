@@ -27,15 +27,15 @@ WHERE (chat_id, message_id) = ($1, $2)
 -- :endmacro
 
 -- :macro save_shout()
--- params: chat_id, message_id, content
-INSERT INTO shout(chat_id, message_id, content)
-VALUES($1, $2, $3)
+-- params: chat_id, message_id, content, entities
+INSERT INTO shout(chat_id, message_id, content, entities)
+VALUES($1, $2, $3, $4)
 ON CONFLICT DO NOTHING
 -- :endmacro
 
 -- :macro random_shout()
 -- params: chat_id
-SELECT content
+SELECT message_id, content, entities
 FROM shout
 WHERE chat_id = $1
 ORDER BY RANDOM()
