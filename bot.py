@@ -44,9 +44,6 @@ def is_command(event):
 			return True
 	return False
 
-def is_megagroup(event):
-	return event.is_group and event.is_channel
-
 def get_peer_id(peer):
 	for attr in 'chat_id', 'channel_id', 'user_id':
 		with contextlib.suppress(AttributeError):
