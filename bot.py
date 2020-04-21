@@ -23,7 +23,7 @@ from functools import wraps
 import asyncpg
 from telethon import TelegramClient, errors, events, tl
 
-import utils.shout
+import utils
 from db import Database
 
 logging.basicConfig(level=logging.INFO)
@@ -50,23 +50,24 @@ def get_peer_id(peer):
 			return getattr(peer, attr)
 	raise TypeError('probably not a peer idk')
 
-def command_required(f):
-	@wraps(f)
-	async def handler(event):
-		if not is_command(event):
-			return
-		await f(event)
-		raise events.StopPropagation
-	return handler
+def check(predicate):
+	predicate = utils.ensure_corofunc(predicate)
+	def deco(wrapped_handler):
+		@wraps(wrapped_handler)
+		async def handler(event):
+			if await predicate(event):
+				await wrapped_handler(event)
+		return handler
+	return deco
 
-def group_required(f):
-	@wraps(f)
-	async def handler(event):
-		if isinstance(event.message.to_id, tl.types.PeerUser):
-			await event.respond('THIS COMMAND MUST BE USED IN A GROUP CHAT')
-		else:
-			return await f(event)
-	return handler
+command_required = check(is_command)
+
+@check
+async def group_required(event):
+	if isinstance(event.message.to_id, tl.types.PeerUser):
+		await event.respond('THIS COMMAND MUST BE USED IN A GROUP CHAT')
+		raise events.StopPropagation
+	return True
 
 # so that we can register them all in the correct order later (globals() is not guaranteed to be ordered)
 event_handlers = []
@@ -111,7 +112,6 @@ async def license_command(event):
 	with open('short-license.txt') as f:
 		await event.respond(f.read())
 
-# this command is defined before /togglegroup so that running /togglegroup does not invoke /toggle as well
 @register_event(events.NewMessage(pattern=r'^/togglegroup'))
 @group_required
 @command_required
@@ -122,6 +122,9 @@ async def togglegroup_command(event):
 		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-OUT** FOR THIS CHAT')
 	else:
 		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-IN** FOR THIS CHAT')
+
+	# don't invoke /toggle as well
+	raise events.StopPropagation
 
 @register_event(events.NewMessage(pattern=r'^/toggle'))
 @command_required
