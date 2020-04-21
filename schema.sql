@@ -10,19 +10,6 @@ CREATE TABLE IF NOT EXISTS shout (
 
 CREATE UNIQUE INDEX IF NOT EXISTS shout_content_unique_idx ON shout (chat_id, content);
 
--- https://stackoverflow.com/a/26284695/1378440
-CREATE OR REPLACE FUNCTION update_time_column()
-RETURNS TRIGGER AS $$ BEGIN
-	IF row(NEW.content) IS DISTINCT FROM row(OLD.content) THEN
-		NEW.time = CURRENT_TIMESTAMP;
-		RETURN NEW;
-	ELSE
-		RETURN OLD; END IF; END; $$ language 'plpgsql';
-
-CREATE TRIGGER update_shout_time
-BEFORE UPDATE ON shout
-FOR EACH ROW EXECUTE PROCEDURE update_time_column();
-
 CREATE TYPE peer_type AS ENUM ('PeerChannel', 'PeerUser', 'PeerChat');
 
 CREATE TABLE IF NOT EXISTS opt (
