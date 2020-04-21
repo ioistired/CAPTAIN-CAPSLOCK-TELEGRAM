@@ -20,7 +20,7 @@ import subprocess
 import traceback
 from functools import wraps
 
-from telethon import tl
+from telethon.tl import types
 from telethon.helpers import add_surrogate
 
 from . import shout
@@ -40,6 +40,17 @@ def peer_id(peer):
 		with contextlib.suppress(AttributeError):
 			return getattr(peer, attr)
 	raise TypeError('probably not a peer idk')
+
+def remove_code(message):
+	content = list(message.message)
+	slices = []
+	for ent, txt in message.get_entities_text():
+		if isinstance(ent, types.MessageEntityCode):
+			slices.append(slice(ent.offset, ent.offset + ent.length))
+	for s in slices:
+		del content[s]
+	return ''.join(content)
+
 
 # modified from jishaku/exception_handling.py @ 1.18.2
 # © 2019 Devon (Gorialis) R
@@ -76,7 +87,7 @@ async def send_traceback(message, verbosity: int, *exc_info):
 
 	def code_converter(content):
 		content = content.strip()
-		return content, [tl.types.MessageEntityCode(offset=0, length=len(add_surrogate(content)))]
+		return content, [types.MessageEntityCode(offset=0, length=len(add_surrogate(content)))]
 
 	return await message.reply(traceback_content, parse_mode=code_converter)
 

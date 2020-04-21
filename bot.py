@@ -34,10 +34,12 @@ logger = logging.getLogger('bot')
 def is_command(event):
 	# this is insanely complicated kill me now
 	message = event.message
-	username = getattr(event.client.user, 'username', None)
-	if not username:
-		logger.warning('I have no username!')
+	try:
+		me = event.client.username
+	except AttributeError:
+		logger.warning('Command ran before event.client was set up!')
 		return False
+
 	dm = isinstance(message.to_id, tl.types.PeerUser)
 	for entity, text in message.get_entities_text(tl.types.MessageEntityBotCommand):
 		if entity.offset != 0:
@@ -84,8 +86,10 @@ async def on_message(event):
 	if is_command(event):
 		return
 
-	if not utils.shout.is_shout(message.raw_text):  # ignore formatting
-		raise events.StopPropagation  # not a command, so don't let the command handlers get to it
+	# ignore formatting, and don't consider code to be a shout
+	# (SQL LIKES TO YELL)
+	if not utils.shout.is_shout(utils.remove_code(message)):
+		return
 
 	if isinstance(message.to_id, tl.types.PeerUser):
 		# this bot doesn't work in DMs but that doesn't mean we can't have a bit of fun
@@ -196,6 +200,7 @@ async def main():
 		config = ast.literal_eval(f.read())
 
 	client = TelegramClient(config['session_name'], config['api_id'], config['api_hash'])
+	client.parse_mode = None  # disable markdown parsing
 	client.config = config
 	pool = await asyncpg.create_pool(**config['database'])
 	client.db = Database(pool)
