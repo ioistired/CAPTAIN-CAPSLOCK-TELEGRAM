@@ -95,7 +95,7 @@ async def on_message(event):
 
 	# ignore formatting, and don't consider code to be a shout
 	# (SQL LIKES TO YELL)
-	if not utils.shout.is_shout(utils.remove_code(message)):
+	if not utils.shout.is_shout(utils.remove_code_and_mentions(message)):
 		return
 
 	if isinstance(message.to_id, tl.types.PeerUser):

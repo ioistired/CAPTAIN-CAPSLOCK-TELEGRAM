@@ -41,16 +41,15 @@ def peer_id(peer):
 			return getattr(peer, attr)
 	raise TypeError('probably not a peer idk')
 
-def remove_code(message):
+def remove_code_and_mentions(message):
 	content = list(message.message)
 	slices = []
 	for ent, txt in message.get_entities_text():
-		if isinstance(ent, types.MessageEntityCode):
+		if isinstance(ent, (types.MessageEntityCode, types.MessageEntityMention, types.MessageEntityMentionName)):
 			slices.append(slice(ent.offset, ent.offset + ent.length))
 	for s in slices:
 		del content[s]
 	return ''.join(content)
-
 
 # modified from jishaku/exception_handling.py @ 1.18.2
 # © 2019 Devon (Gorialis) R
