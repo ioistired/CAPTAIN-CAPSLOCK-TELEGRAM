@@ -41,6 +41,9 @@ def is_command(event):
 		logger.warning('Command ran before event.client was set up!')
 		return False
 
+	if message.from_id == me.id:
+		return False
+
 	dm = isinstance(message.to_id, tl.types.PeerUser)
 	for entity, text in message.get_entities_text(tl.types.MessageEntityBotCommand):
 		if entity.offset != 0:
@@ -85,6 +88,9 @@ def register_event(*args, **kwargs):
 async def on_message(event):
 	message = event.message
 	if is_command(event):
+		return
+
+	if message.from_id == event.client.user.id:
 		return
 
 	# ignore formatting, and don't consider code to be a shout
