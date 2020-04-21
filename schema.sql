@@ -25,17 +25,6 @@ CREATE TABLE shout (
 
 CREATE UNIQUE INDEX shout_content_unique_idx ON shout (chat_id, content);
 
-CREATE TABLE shout_2 (
-	chat_id INT4 NOT NULL,
-	message_id INT4 NOT NULL,
-	content TEXT NOT NULL,
-	entities BYTEA[] NOT NULL DEFAULT ARRAY[]::BYTEA[],
-	time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-	PRIMARY KEY (chat_id, message_id));
-
-CREATE UNIQUE INDEX shout_2_content_unique_idx ON shout_2 (chat_id, content, entities);
-
 CREATE TYPE peer_type AS ENUM ('PeerChannel', 'PeerUser', 'PeerChat');
 
 CREATE TABLE opt (
