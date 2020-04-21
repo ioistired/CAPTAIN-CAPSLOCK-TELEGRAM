@@ -184,7 +184,7 @@ async def remove_command(event):
 async def python(event):
 	message = event.message
 	async with utils.ReplExceptionCatcher(message):
-		async for x in AsyncCodeExecutor(event.command_text, arg_dict=dict(event=event)):
+		async for x in AsyncCodeExecutor(event.command_text, arg_dict=dict(event=event, telethon=telethon, tl=tl)):
 			if not isinstance(x, str):
 				x = repr(x)
 
