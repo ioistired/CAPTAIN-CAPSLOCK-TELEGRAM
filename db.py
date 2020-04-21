@@ -13,13 +13,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with CAPTAIN CAPSLOCK.  If not, see <https://www.gnu.org/licenses/>.
 
-import typing
+from typing import Type, Union
 
 import asyncpg
 import jinja2
 from telethon.tl import types
 
-PeerType = typing.Union[typing.Type[types.PeerUser], typing.Type[types.PeerChannel], typing.Type[types.PeerChat]]
+PeerType = Union[Type[types.PeerUser], Type[types.PeerChannel], Type[types.PeerChat]]
 
 class Database:
 	def __init__(self, pool):
@@ -74,5 +74,5 @@ class Database:
 			default_new_state = not chat_state
 		return await self.toggle_state(types.PeerUser, user_id, default_new_state=default_new_state)
 
-	async def state(self, chat_id, user_id):
-		return await self.pool.fetchval(self.queries.state(), chat_id, user_id)
+	async def state(self, peer_type, peer_id, user_id):
+		return await self.pool.fetchval(self.queries.state(), peer_type.__name__, peer_id, user_id)

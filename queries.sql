@@ -43,10 +43,10 @@ WHERE
 -- :endmacro
 
 -- :macro state()
--- params: chat_id, user_id
+-- params: peer_type, peer_id, user_id
 SELECT COALESCE(
-	(SELECT state FROM opt WHERE peer_type = 'PeerUser' AND id = $2),
-	(SELECT state FROM opt WHERE peer_type = 'PeerChat' AND id = $1),
+	(SELECT state FROM opt WHERE peer_type = 'PeerUser' AND id = $3),
+	(SELECT state FROM opt WHERE peer_type = $1 AND id = $2),
 	true) -- default state
 -- :endmacro
 

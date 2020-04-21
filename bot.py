@@ -44,6 +44,15 @@ def is_command(event):
 			return True
 	return False
 
+def is_megagroup(event):
+	return event.is_group and event.is_channel
+
+def get_peer_id(peer):
+	for attr in 'chat_id', 'channel_id', 'user_id':
+		with contextlib.suppress(AttributeError):
+			return getattr(peer, attr)
+	raise TypeError('probably not a peer idk')
+
 def command_required(f):
 	@wraps(f)
 	async def handler(event):
@@ -56,8 +65,8 @@ def command_required(f):
 def group_required(f):
 	@wraps(f)
 	async def handler(event):
-		if not isinstance(event.message.to_id, tl.types.PeerChat):
-			await event.respond('THIS COMMAND MAY NOT BE USED IN PRIVATE MESSAGES')
+		if isinstance(event.message.to_id, tl.types.PeerUser):
+			await event.respond('THIS COMMAND MUST BE USED IN A GROUP CHAT')
 		else:
 			return await f(event)
 	return handler
@@ -84,13 +93,13 @@ async def on_message(event):
 		await event.respond('KEEP YOUR VOICE DOWN')
 		raise events.StopPropagation
 
-	chat_id, user_id = message.to_id.chat_id, message.from_id
-	if not await event.client.db.state(chat_id, user_id):
+	peer_id, user_id = get_peer_id(message.to_id), message.from_id
+	if not await event.client.db.state(type(message.to_id), peer_id, user_id):
 		return
 
-	shout = await event.client.db.random_shout(chat_id)
+	shout = await event.client.db.random_shout(peer_id)
 	if shout: await event.respond(shout)
-	await event.client.db.save_shout(chat_id, message.id, message.text)  # but replay formatting next time it's said
+	await event.client.db.save_shout(peer_id, message.id, message.text)  # but replay formatting next time it's said
 
 	raise events.StopPropagation
 
@@ -105,12 +114,13 @@ async def license_command(event):
 	with open('short-license.txt') as f:
 		await event.respond(f.read())
 
+# this command is defined before /togglegroup so that running /togglegroup does not invoke /toggle as well
 @register_event(events.NewMessage(pattern=r'^/togglegroup'))
 @group_required
 @command_required
 async def togglegroup_command(event):
 	message = event.message
-	new_state = await event.client.db.toggle_state(type(event.message.to_id), event.message.to_id.chat_id)
+	new_state = await event.client.db.toggle_state(type(message.to_id), get_peer_id(message.to_id))
 	if new_state:
 		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-OUT** FOR THIS CHAT')
 	else:
@@ -139,9 +149,12 @@ async def remove_command(event):
 		return
 
 	if event.is_group and event.is_channel:
-		logging.info('%s tried to run /remove in a megagroup', (await event.get_sender()).username)
-		await event.respond(f'THIS COMMAND DOES NOT SUPPORT MEGA GROUPS YET. PLEASE CONTACT {event.client.config["owner"]}.')
-		return
+		participant = await event.client(tl.functions.channels.GetParticipantRequest(
+			channel=message.to_id,
+			user_id=message.from_id))
+		if not isinstance(participant, tl.types.ChannelParticipantAdmin) or not participant.admin_rights.delete_messages:
+			await event.respond('YOU MUST BE AN ADMIN WITH DELETE MESSAGES PERMISSION TO RUN THIS COMMAND.')
+			return
 
 	# we're not in a mega group. members of small groups can delete any message, so they have permission to run this command.
 
@@ -159,13 +172,14 @@ async def remove_command(event):
 			await msg.delete()
 
 async def main():
+	import ast
 	with open('config.py') as f:
-		config = eval(f.read(), {})
+		config = ast.literal_eval(f.read())
 
 	client = TelegramClient(config['session_name'], config['api_id'], config['api_hash'])
 	client.config = config
-	client.pool = await asyncpg.create_pool(**config['database'])
-	client.db = Database(client.pool)
+	pool = await asyncpg.create_pool(**config['database'])
+	client.db = Database(pool)
 
 	for handler in event_handlers:
 		client.add_event_handler(handler)
@@ -176,4 +190,5 @@ async def main():
 	await client.run_until_disconnected()
 
 if __name__ == '__main__':
-	asyncio.get_event_loop().run_until_complete(main())
+	with contextlib.suppress(KeyboardInterrupt):
+		asyncio.get_event_loop().run_until_complete(main())
