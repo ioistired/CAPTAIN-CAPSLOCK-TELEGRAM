@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright © 2018–2019 Io Mintz <io@mintz.cc>
+# Copyright © 2018–2020 Io Mintz <io@mintz.cc>
 #
 # CAPTAIN CAPSLOCK is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published

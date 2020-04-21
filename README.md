@@ -57,7 +57,7 @@ You'll also want to submit the contents of [command_list.txt](/command_list.txt)
 
 ## License
 
-Copyright © 2018–2019 Io Mintz
+Copyright © 2018–2020 Io Mintz
 
 CAPTAIN CAPSLOCK is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
