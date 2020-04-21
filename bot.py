@@ -35,7 +35,8 @@ def is_command(event):
 	# this is insanely complicated kill me now
 	message = event.message
 	try:
-		me = event.client.username
+		me = event.client.user
+		username = me.username
 	except AttributeError:
 		logger.warning('Command ran before event.client was set up!')
 		return False
