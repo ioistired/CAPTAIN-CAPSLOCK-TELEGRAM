@@ -37,9 +37,8 @@ ON CONFLICT DO NOTHING
 -- params: chat_id
 SELECT content
 FROM shout
+TABLESAMPLE SYSTEM_ROWS(1)
 WHERE chat_id = $1
-ORDER BY RANDOM()
-LIMIT 1
 -- :endmacro
 
 -- :macro delete_by_chat()
