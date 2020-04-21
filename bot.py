@@ -21,6 +21,7 @@ import logging
 from functools import wraps
 
 import asyncpg
+import telethon
 from telethon import TelegramClient, errors, events, tl
 from jishaku.repl import AsyncCodeExecutor
 

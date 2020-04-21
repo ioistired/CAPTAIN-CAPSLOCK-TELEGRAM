@@ -46,7 +46,7 @@ async def send_traceback(message, verbosity: int, *exc_info):
 	Used when REPL fails for any reason.
 
 	:param message: What message to reply to with this information
-	:param verbosity: How far back this traceback should go. 0 shows just the last stack.
+	:param verbosity: How far back this traceback should go. 0 shows just the last stack. None shows all.
 	:param exc_info: Information about this exception, from sys.exc_info or similar.
 	:return: The last message sent
 	"""
@@ -71,10 +71,9 @@ class ReplExceptionCatcher:  # pylint: disable=too-few-public-methods
 			return
 
 		if isinstance(exc_val, (SyntaxError, asyncio.TimeoutError, subprocess.TimeoutExpired)):
-			verbosity = 0
+			limit = 0
 		else:
-			# this traceback likely needs more info, so increase verbosity
-			verbosity = 8
+			limit = None
 
-		await send_traceback(self.message, verbosity, exc_type, exc_val, exc_tb)
+		await send_traceback(self.message, limit, exc_type, exc_val, exc_tb)
 		return True	 # the exception has been handled
