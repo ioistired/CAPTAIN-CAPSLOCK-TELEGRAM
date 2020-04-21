@@ -22,6 +22,7 @@ from functools import wraps
 
 import asyncpg
 from telethon import TelegramClient, errors, events, tl
+from jishaku.repl import AsyncCodeExecutor
 
 import utils
 from db import Database
@@ -39,8 +40,9 @@ def is_command(event):
 	dm = isinstance(message.to_id, tl.types.PeerUser)
 	for entity, text in message.get_entities_text(tl.types.MessageEntityBotCommand):
 		if entity.offset != 0:
-			continue
+			break
 		if dm or text.endswith('@' + username):
+			event.command_text = event.message.raw_text[len(text):].strip()
 			return True
 	return False
 
@@ -61,6 +63,10 @@ def check(predicate):
 	return deco
 
 command_required = check(is_command)
+
+@check
+def owner_required(event):
+	return event.sender.id in event.client.config['owner_ids']
 
 @check
 async def group_required(event):
@@ -170,6 +176,24 @@ async def remove_command(event):
 		# we don't use client.delete_messages because that errors if *any* message fails to delete
 		for msg in to_delete:
 			await msg.delete()
+
+@register_event(events.NewMessage(pattern=r'^/py'))
+@command_required
+@owner_required
+async def python(event):
+	message = event.message
+	async with utils.ReplExceptionCatcher(message):
+		async for x in AsyncCodeExecutor(event.command_text, arg_dict=dict(event=event)):
+			if not isinstance(x, str):
+				x = repr(x)
+
+			if not x.strip():
+				# represent nothingness, without actually sending nothing
+				x = '\N{zero width space}'
+
+			message = await message.reply(x)
+
+		await event.reply('✅')
 
 async def main():
 	import ast

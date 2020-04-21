@@ -16,4 +16,7 @@
 
 	# @mention of this bot's admin
 	'owner': ...,
+	# set of user IDs that can run administrative commands on the bot
+	'owner_ids': {
+	},
 }
