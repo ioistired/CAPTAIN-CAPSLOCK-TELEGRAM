@@ -173,10 +173,7 @@ async def main():
 	await client.start(bot_token=config['api_token'])
 	client.user = await client.get_me()
 
-	try:
-		await client._run_until_disconnected()
-	finally:
-		client.disconnect()
+	await client.run_until_disconnected()
 
 if __name__ == '__main__':
 	asyncio.get_event_loop().run_until_complete(main())
