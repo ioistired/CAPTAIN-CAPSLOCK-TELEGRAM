@@ -108,7 +108,7 @@ async def on_message(event):
 		return
 
 	shout = await event.client.db.random_shout(message.to_id)
-	if shout: await event.respond(shout)
+	await event.respond(shout or "I AIN'T GOT NOTHIN' ON THAT")
 	await event.client.db.save_shout(message)
 
 	raise events.StopPropagation
