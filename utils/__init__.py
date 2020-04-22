@@ -21,7 +21,7 @@ import traceback
 from functools import wraps
 
 from telethon.tl import types
-from telethon.helpers import add_surrogate
+from telethon.helpers import add_surrogate, del_surrogate
 
 from . import shout
 
@@ -42,14 +42,14 @@ def peer_id(peer):
 	raise TypeError('probably not a peer idk')
 
 def remove_code_and_mentions(message):
-	content = list(message.message)
+	content = list(add_surrogate(message.message))
 	slices = []
 	for ent, txt in message.get_entities_text():
 		if isinstance(ent, (types.MessageEntityCode, types.MessageEntityMention, types.MessageEntityMentionName)):
 			slices.append(slice(ent.offset, ent.offset + ent.length))
-	for s in slices:
+	for s in reversed(slices):
 		del content[s]
-	return ''.join(content)
+	return del_surrogate(''.join(content))
 
 # modified from jishaku/exception_handling.py @ 1.18.2
 # © 2019 Devon (Gorialis) R
