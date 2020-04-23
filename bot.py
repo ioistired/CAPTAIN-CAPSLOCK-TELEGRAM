@@ -24,6 +24,7 @@ import asyncpg
 import telethon
 from telethon import TelegramClient, errors, events, tl
 from jishaku.repl import AsyncCodeExecutor
+from jishaku.functools import AsyncSender
 
 import utils
 from db import Database
@@ -189,7 +190,16 @@ async def remove_command(event):
 async def python(event):
 	message = event.message
 	async with utils.ReplExceptionCatcher(message):
-		async for x in AsyncCodeExecutor(event.command_text, arg_dict=dict(event=event, telethon=telethon, tl=tl)):
+		async for send, x in AsyncSender(AsyncCodeExecutor(event.command_text, arg_dict=dict(
+			event=event,
+			telethon=telethon,
+			tl=tl,
+			message=message,
+			_=event.client.last_python_result,
+		))):
+			if x is not None:
+				event.client.last_python_result = x
+
 			if not isinstance(x, str):
 				x = repr(x)
 
@@ -198,6 +208,7 @@ async def python(event):
 				x = '\N{zero width space}'
 
 			message = await message.reply(x)
+			send(message)
 
 		await event.reply('✅')
 
@@ -211,6 +222,7 @@ async def main():
 	client.config = config
 	pool = await asyncpg.create_pool(**config['database'])
 	client.db = Database(pool)
+	client.last_python_result = None
 
 	for handler in event_handlers:
 		client.add_event_handler(handler)
