@@ -4,21 +4,9 @@ A Telegram bot that shouts at you when you shout at it.
 
 ## How does it operate?
 
-Say something. Say anything. But say it LOUDLY. The cap' will log what you say (for your server only) and
+Say something. Say anything. But say it LOUDLY. The cap' will log what you say (for your group chat only) and
 shout something random back at you. The more you shout at it, the bigger its repertoire gets.
 Duplicate text will not be logged.
-
-## What about message deletes/edits?
-
-Deleting a message will delete its correspond entry in the database, if there is one.
-Editing a message will update the entry to match, however,
-if you sneakily edit a shout so that it's no longer a shout,
-the bot will delete the correspond entry in the database instead.
-For example, saying "YOOOOO" and then editing it to "yo" will mean that the cap' will not say "YOOOOO" anymore.
-
-If a channel is deleted, all of its corresponding messages are deleted from the database.
-
-When Captain Caps is kicked from a server, all shouts for that server are deleted from its database.
 
 ## What commands does it have?
 
@@ -44,7 +32,6 @@ You'll need PostgreSQL 11+ and python3.6+.
 
 ```
 $ createdb captain_capslock
-$ sudo -u postgres psql captain_capslock -c 'CREATE EXTENSION tsm_system_rows'
 $ psql captain_capslock -f schema.sql
 $ cp data/config.example.json data/config.json
 $ # edit config.json as needed
