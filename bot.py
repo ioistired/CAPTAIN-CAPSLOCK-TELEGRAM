@@ -122,7 +122,7 @@ async def ping_command(event):
 @command_required
 async def license_command(event):
 	with open('short-license.txt') as f:
-		await event.respond(f.read())
+		await event.respond(f.read(), parse_mode='markdown')
 
 @register_event(events.NewMessage(pattern=r'^/togglegroup'))
 @group_required
@@ -131,9 +131,9 @@ async def togglegroup_command(event):
 	message = event.message
 	new_state = await event.client.db.toggle_state(type(message.to_id), utils.peer_id(message.to_id))
 	if new_state:
-		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-OUT** FOR THIS CHAT')
+		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-OUT** FOR THIS CHAT', parse_mode='markdown')
 	else:
-		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-IN** FOR THIS CHAT')
+		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-IN** FOR THIS CHAT', parse_mode='markdown')
 
 	# don't invoke /toggle as well
 	raise events.StopPropagation
