@@ -33,13 +33,21 @@ VALUES($1, $2, $3, $4)
 ON CONFLICT DO NOTHING
 -- :endmacro
 
+-- :macro random_row_pred(table, pred)
+FROM {{ table }}
+WHERE {{ pred }}
+OFFSET FLOOR(RANDOM() * (
+	SELECT COUNT(*)
+	FROM {{ table }}
+	WHERE {{ pred }}
+))
+FETCH FIRST ROW ONLY
+-- :endmacro
+
 -- :macro random_shout()
 -- params: chat_id
 SELECT message_id, content, entities
-FROM shout
-WHERE chat_id = $1
-ORDER BY RANDOM()
-LIMIT 1
+{{ random_row_pred('shout', 'chat_id = $1') }}
 -- :endmacro
 
 -- :macro delete_by_chat()
