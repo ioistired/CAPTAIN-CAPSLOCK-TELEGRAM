@@ -104,8 +104,8 @@ async def on_message(event):
 		await event.respond('KEEP YOUR VOICE DOWN')
 		raise events.StopPropagation
 
-	peer_id, user_id = utils.peer_id(message.to_id), message.from_id
-	if not await event.client.db.state(type(message.to_id), peer_id, user_id):
+	peer_id, user_id = event.chat_id, message.from_id
+	if not await event.client.db.state(peer_id, user_id):
 		return
 
 	shout = await event.client.db.random_shout(message.to_id)
@@ -130,7 +130,7 @@ async def license_command(event):
 @command_required
 async def togglegroup_command(event):
 	message = event.message
-	new_state = await event.client.db.toggle_state(type(message.to_id), utils.peer_id(message.to_id))
+	new_state = await event.client.db.toggle_state(event.chat_id)
 	if new_state:
 		await event.respond('SHOUTING AUTO RESPONSE IS NOW **OPT-OUT** FOR THIS CHAT', parse_mode='markdown')
 	else:
@@ -143,7 +143,7 @@ async def togglegroup_command(event):
 @command_required
 async def toggle_command(event):
 	message = event.message
-	chat_id = message.to_id.chat_id if isinstance(message.to_id, tl.types.PeerChat) else None
+	chat_id = event.chat_id if not isinstance(message.to_id, tl.types.PeerUser) else None
 	new_state = await event.client.db.toggle_user_state(event.message.from_id, chat_id)
 	if new_state:
 		await event.respond('OPTED IN TO THE SHOUTING AUTO RESPONSE')
@@ -165,7 +165,7 @@ async def remove_command(event):
 		participant = await event.client(tl.functions.channels.GetParticipantRequest(
 			channel=message.to_id,
 			user_id=message.from_id))
-		if not isinstance(participant, tl.types.ChannelParticipantAdmin) or not participant.admin_rights.delete_messages:
+		if not (isinstance(participant, tl.types.ChannelParticipantAdmin) and participant.admin_rights.delete_messages):
 			await event.respond('YOU MUST BE AN ADMIN WITH DELETE MESSAGES PERMISSION TO RUN THIS COMMAND.')
 			return
 

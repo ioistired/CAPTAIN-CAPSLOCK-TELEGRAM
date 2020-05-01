@@ -16,7 +16,7 @@
 SET TIME ZONE 'UTC';
 
 CREATE TABLE shout (
-	chat_id INT4 NOT NULL,
+	chat_id INT8 NOT NULL,
 	message_id INT4 NOT NULL,
 	content TEXT NOT NULL,
 	entities BYTEA[] NOT NULL DEFAULT ARRAY[]::BYTEA[],
@@ -26,11 +26,6 @@ CREATE TABLE shout (
 
 CREATE UNIQUE INDEX shout_content_unique_idx ON shout (chat_id, content, entities);
 
-CREATE TYPE peer_type AS ENUM ('PeerChannel', 'PeerUser', 'PeerChat');
-
 CREATE TABLE opt (
-	id INT4 NOT NULL,
-	state BOOLEAN NOT NULL,
-	peer_type peer_type NOT NULL,
-
-	PRIMARY KEY (id, peer_type));
+	peer_id INT8 NOT NULL PRIMARY KEY,
+	state BOOLEAN NOT NULL);

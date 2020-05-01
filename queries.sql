@@ -49,35 +49,33 @@ WHERE chat_id = $1
 -- :endmacro
 
 -- :macro state_for()
--- params: peer_type, id
+-- params: peer_id
 SELECT state
 FROM opt
-WHERE
-	peer_type = $1
-	AND id = $2
+WHERE peer_id = $1
 -- :endmacro
 
 -- :macro state()
 -- params: peer_type, peer_id, user_id
 SELECT COALESCE(
-	(SELECT state FROM opt WHERE peer_type = 'PeerUser' AND id = $3),
-	(SELECT state FROM opt WHERE peer_type = $1 AND id = $2),
+	(SELECT state FROM opt WHERE peer_id = $2),
+	(SELECT state FROM opt WHERE peer_id = $1),
 	true) -- default state
 -- :endmacro
 
 -- :macro toggle_state()
--- params: peer_type, id, default_new_state
+-- params: peer_id, default_new_state
 -- returns: new state
-INSERT INTO opt (peer_type, id, state) VALUES ($1, $2, $3)
-ON CONFLICT (peer_type, id) DO UPDATE
+INSERT INTO opt (peer_id, state) VALUES ($1, $2)
+ON CONFLICT (peer_id) DO UPDATE
 SET state = NOT opt.state
 RETURNING state
 -- :endmacro
 
 -- :macro set_state()
--- params: peer_type, id, new_state
-INSERT INTO opt (peer_type, id, state)
-VALUES ($1, $2, $3)
-ON CONFLICT (peer_type, id) DO UPDATE
+-- params: peer_id, new_state
+INSERT INTO opt (peer_id, state)
+VALUES ($1, $2)
+ON CONFLICT (peer_id) DO UPDATE
 SET state = EXCLUDED.state
 -- :endmacro

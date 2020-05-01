@@ -13,16 +13,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with CAPTAIN CAPSLOCK.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Type, Union
-
 import asyncpg
 import jinja2
+import telethon.utils
 from telethon.tl import types
 from telethon.extensions import BinaryReader
-
-import utils
-
-PeerType = Union[Type[types.PeerUser], Type[types.PeerChannel], Type[types.PeerChat]]
 
 class Database:
 	def __init__(self, pool):
@@ -51,12 +46,12 @@ class Database:
 
 		tag = await self.pool.execute(
 			self.queries.save_shout(),
-			utils.peer_id(message.to_id), message.id, content, list(map(bytes, entities)),
+			telethon.utils.get_peer_id(message.to_id), message.id, content, list(map(bytes, entities)),
 		)
 		return tag == 'INSERT 0 1'
 
 	async def random_shout(self, peer):
-		chat_id = utils.peer_id(peer)
+		chat_id = telethon.utils.get_peer_id(peer)
 		row = await self.pool.fetchrow(self.queries.random_shout(), chat_id)
 		if row is None:
 			return None
@@ -72,29 +67,29 @@ class Database:
 		tag = await self.pool.execute(self.queries.delete_by_chat(), guild_or_user)
 		return int(tag.split()[-1])
 
-	async def state_for(self, peer_type: PeerType, id):
-		return await self.pool.fetchval(self.queries.state_for(), peer_type.__name__, id)
+	async def state_for(self, peer_id):
+		return await self.pool.fetchval(self.queries.state_for(), peer_id)
 
-	async def toggle_state(self, peer_type: PeerType, id, *, default_new_state=False):
-		"""toggle the state for a user or guild. If there's no entry already, new state = default_new_state."""
-		return await self.pool.fetchval(self.queries.toggle_state(), peer_type.__name__, id, default_new_state)
+	async def toggle_state(self, peer_id, *, default_new_state=False):
+		"""toggle the state for a user or chat. If there's no entry already, new state = default_new_state."""
+		return await self.pool.fetchval(self.queries.toggle_state(), peer_id, default_new_state)
 
-	async def set_state(self, peer_type: PeerType, id, new_state):
-		await self.pool.execute(self.queries.set_state(), peer_type.__name__, guild_id, new_state)
+	async def set_state(self, peer_id, new_state):
+		await self.pool.execute(self.queries.set_state(), peer_id, new_state)
 
 	async def toggle_user_state(self, user_id, chat_id=None) -> bool:
 		"""Toggle whether the user has opted in to the bot.
 		If the user does not have an entry already:
-			If the chat_id is provided and not None, the user's state is set to the opposite of the chat'
+			If the chat_id is provided and not None, the user's state is set to the opposite of the chat's.
 			Otherwise, the user's state is set to True (opted in), since the default state is False.
 		Returns the new state.
 		"""
 		default_new_state = False
-		chat_state = await self.state_for(types.PeerChat, chat_id) if chat_id is not None else default_new_state
+		chat_state = await self.state_for(chat_id) if chat_id is not None else default_new_state
 		if chat_state is not None:
 			# if the auto response is enabled for the chat then toggling the user state should opt out
 			default_new_state = not chat_state
-		return await self.toggle_state(types.PeerUser, user_id, default_new_state=default_new_state)
+		return await self.toggle_state(user_id, default_new_state=default_new_state)
 
-	async def state(self, peer_type, peer_id, user_id):
-		return await self.pool.fetchval(self.queries.state(), peer_type.__name__, peer_id, user_id)
+	async def state(self, peer_id, user_id):
+		return await self.pool.fetchval(self.queries.state(), peer_id, user_id)
