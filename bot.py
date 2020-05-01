@@ -212,7 +212,7 @@ async def python(event):
 
 		await event.reply('✅')
 
-async def main():
+async def init_client():
 	import ast
 	with open('config.py') as f:
 		config = ast.literal_eval(f.read())
@@ -227,7 +227,11 @@ async def main():
 	for handler in event_handlers:
 		client.add_event_handler(handler)
 
-	await client.start(bot_token=config['api_token'])
+	return client
+
+async def main():
+	client = await init_client()
+	await client.start(bot_token=client.config['api_token'])
 	client.user = await client.get_me()
 
 	await client.run_until_disconnected()
