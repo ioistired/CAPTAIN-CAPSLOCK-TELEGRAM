@@ -18,6 +18,7 @@
 import asyncio
 import contextlib
 import logging
+from random import random
 from functools import wraps
 
 import asyncpg
@@ -92,6 +93,10 @@ async def on_message(event):
 		return
 
 	if message.from_id == event.client.user.id:
+		return
+
+	# try to reduce spam
+	if random() < 0.4:
 		return
 
 	# ignore formatting, and don't consider code to be a shout
