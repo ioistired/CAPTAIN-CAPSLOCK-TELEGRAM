@@ -95,10 +95,6 @@ async def on_message(event):
 	if message.from_id == event.client.user.id:
 		return
 
-	# try to reduce spam
-	if random() < 0.4:
-		return
-
 	# ignore formatting, and don't consider code to be a shout
 	# (SQL LIKES TO YELL)
 	if not utils.shout.is_shout(utils.remove_code_and_mentions(message)):
@@ -113,10 +109,12 @@ async def on_message(event):
 	if not await event.client.db.state(peer_id, user_id):
 		return
 
-	shout = await event.client.db.random_shout(message.to_id)
-	await event.respond(shout or "I AIN'T GOT NOTHIN' ON THAT")
-	await event.client.db.save_shout(message)
+	# try to reduce spam
+	if random() > 0.6:
+		shout = await event.client.db.random_shout(message.to_id)
+		await event.respond(shout or "I AIN'T GOT NOTHIN' ON THAT")
 
+	await event.client.db.save_shout(message)
 	raise events.StopPropagation
 
 @register_event(events.NewMessage(pattern=r'^/ping'))
