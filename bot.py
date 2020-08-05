@@ -110,7 +110,7 @@ async def on_message(event):
 		return
 
 	# try to reduce spam
-	if random() > 0.6:
+	if random() < 0.6:
 		shout = await event.client.db.random_shout(message.to_id)
 		await event.respond(shout or "I AIN'T GOT NOTHIN' ON THAT")
 
