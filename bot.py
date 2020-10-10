@@ -30,6 +30,9 @@ from jishaku.functools import AsyncSender
 import utils
 from db import Database
 
+# only respond this often to reduce bickering and prevent having the last word all the time
+SHOUT_RESPONSE_PROBABILITY = 0.4
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('bot')
 
@@ -110,7 +113,7 @@ async def on_message(event):
 		return
 
 	# try to reduce spam
-	if random() < 0.6:
+	if random() < SHOUT_RESPONSE_PROBABILITY:
 		shout = await event.client.db.random_shout(message.to_id)
 		await event.respond(shout or "I AIN'T GOT NOTHIN' ON THAT")
 
