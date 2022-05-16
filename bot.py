@@ -108,7 +108,10 @@ async def on_message(event):
 		await event.respond('KEEP YOUR VOICE DOWN')
 		raise events.StopPropagation
 
-	peer_id, user_id = event.chat_id, message.from_id
+	if not isinstance(message.from_id, tl.types.PeerUser):
+		return
+
+	peer_id, user_id = event.chat_id, message.from_id.user_id
 	if not await event.client.db.state(peer_id, user_id):
 		return
 

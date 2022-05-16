@@ -57,7 +57,12 @@ class Database:
 			return None
 		message_id, content, encoded_entities = row
 		entities = [BinaryReader(encoded).tgread_object() for encoded in encoded_entities]
-		return types.Message(id=message_id, to_id=chat_id, message=content, entities=entities)
+		return types.Message(
+			id=message_id,
+			peer_id=types.PeerChat(chat_id=chat_id),
+			message=content,
+			entities=entities,
+		)
 
 	async def delete_shout(self, chat_id, message_id, *, connection=None):
 		tag = await (connection or self.pool).execute(self.queries.delete_shout(), chat_id, message_id)
